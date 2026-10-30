@@ -1,0 +1,81 @@
+---
+export const title = "Burst Effect";
+export const desc = "Why do people call this confetti?";
+export const jsFile = "burst.js";
+---
+
+<style>
+  rex-burst {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+</style>
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This component is used to produce a fireworks or confetti type of effect
+  centering on the the click or touch event locaton. In the default
+  configuration if you trigger the click event artificially in code then random
+  coordinates are used for the click event.
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <div class="text">click</div>
+  <rex-burst particleCount={40} duration={0.9}></rex-burst>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import "../lib/burst";
+  
+  //use it in your HTML
+  <rex-burst particleCount={40} duration={0.9}></rex-burst>
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+</div>
+
+<script>
+  import "../lib/burst.js?import";
+
+  const loadEffect = () => {
+    const container: any = document.querySelector(
+      "#BurstEffect-wrap rex-burst"
+    );
+    if (container) {
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          container.click();
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              container.click();
+              setTimeout(() => {
+                requestAnimationFrame(() => {
+                  container.click();
+                });
+              }, 300);
+            });
+          }, 300);
+        });
+      }, 500);
+    }
+  };
+  loadEffect();
+
+  addEventListener("navigationChanged", (event: any) => {
+    if (event.detail === "Burst Effect") {
+      loadEffect();
+    }
+  });
+</script>

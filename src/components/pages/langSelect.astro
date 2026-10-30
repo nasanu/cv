@@ -1,0 +1,37 @@
+---
+export const title = "Language Selector";
+export const jsFile = "langSelect.js";
+---
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This component is allows users to change the displayed language. It works in
+  conjunction with the <a href="#Translate">translate component</a> which is required
+  to be setup first.
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-langselect></rex-langselect>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import {rex-langselect} from TBA;
+  
+  //use it in your HTML
+  <rex-langselect>someString</rex-langselect>
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+</div>
+
+<script>
+  import "../lib/langSelect";
+</script>

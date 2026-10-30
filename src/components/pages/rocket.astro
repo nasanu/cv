@@ -1,0 +1,610 @@
+---
+export const title = "Rocket";
+export const desc = "Why do I have to be the one to do this?";
+export const jsFile = "";
+---
+
+<style>
+  #rocket-outer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 9;
+    background-color: #adadeb;
+    overflow: hidden;
+    background: linear-gradient(
+      0deg,
+      rgba(173, 173, 235, 1) 0%,
+      rgba(173, 173, 235, 1) 30%,
+      rgba(14, 15, 20, 1) 70%
+    );
+    background-position: 0 100%;
+    background-size: 200% 200%;
+  }
+
+  .fadeBg {
+    animation: bgFade 6s linear 0.3s forwards;
+  }
+
+  .showMoon {
+    animation: moonSlideIn 6s ease-out forwards;
+  }
+
+  .animation-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+
+    .cloud {
+      position: absolute;
+      background-image: url(/rocket/cloud.svg);
+      background-repeat: no-repeat;
+      background-size: 100%;
+      &.s {
+        width: 3.313rem;
+        height: 1rem;
+        top: 5vh;
+        left: 33vw;
+      }
+      &.m {
+        width: 4.25rem;
+        height: 1.375rem;
+        top: 34vh;
+        left: 13vw;
+      }
+      &.l {
+        width: 5.75rem;
+        height: 2rem;
+        top: 37vh;
+        right: 5vw;
+      }
+    }
+
+    #rocket-container {
+      position: absolute;
+      z-index: 9;
+      bottom: 20%;
+      display: flex;
+      justify-content: center;
+
+      #ship {
+        width: 6.438rem;
+        height: 11.125rem;
+        background-image: url(/rocket/ship.svg);
+        background-repeat: no-repeat;
+        background-size: 100%;
+        position: relative;
+        z-index: 9;
+      }
+
+      #flame {
+        position: absolute;
+        bottom: -10%;
+        z-index: 8;
+        &.orbit {
+          animation: orbitFlame 2s linear;
+        }
+      }
+      #plume {
+        bottom: -89%;
+        left: -14%;
+        width: 130%;
+        z-index: 7;
+        animation: 0.6s infinite linear shakeL;
+      }
+
+      /* animations */
+      &.shake-flame {
+        animation: 0.2s infinite linear shake;
+        z-index: 0;
+        #flame {
+          width: 38%;
+          height: 261%;
+          bottom: -173%;
+        }
+        #plume {
+          display: none;
+        }
+      }
+    }
+
+    img {
+      position: absolute;
+    }
+
+    #exhust1,
+    #exhust2 {
+      animation: 12s infinite alternate linear sideToSide;
+      width: 150vw;
+      max-height: 30vh;
+      bottom: 0;
+      margin-bottom: -0.5rem;
+    }
+
+    #exhust1 {
+      z-index: 99;
+    }
+    #exhust2 {
+      animation-name: sideToSide2;
+    }
+  }
+  #exhusts {
+    transform-style: flat;
+    width: 100%;
+  }
+  #text-container {
+    padding: 0.75rem 1.5rem;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 9;
+    h1 {
+      color: #232361;
+      font-weight: 600;
+      size: 1.125rem;
+    }
+    p {
+      color: #232361;
+    }
+    a {
+      color: #007acc;
+    }
+    button {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+      background-color: #ff008c;
+      color: white;
+      border-radius: 2rem;
+      height: 2rem;
+      border: 0;
+      width: 100%;
+      font-weight: bold;
+    }
+  }
+
+  .cloud:not(.initial) {
+    transform: translateY(-47vh);
+  }
+
+  .drop {
+    animation: 1s ease-in forwards drop;
+  }
+
+  .slow-drop {
+    animation: 6s linear forwards slow-drop;
+  }
+  .initial-drop {
+    animation: 3s linear forwards initial-drop;
+  }
+  .star-outer {
+    width: 1rem;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &.s {
+      width: 0.5rem;
+    }
+    &.m {
+      width: 0.7rem;
+    }
+    &.l {
+      width: 0.9rem;
+    }
+    &.pos1 {
+      top: 3vh;
+      left: 3vw;
+      .star {
+        animation-delay: 0ms;
+      }
+    }
+    &.pos2 {
+      top: 10vh;
+      left: 22vw;
+      .star {
+        animation-delay: 200ms;
+      }
+    }
+    &.pos3 {
+      top: 6vh;
+      left: 46vw;
+      .star {
+        animation-delay: 400ms;
+      }
+    }
+    &.pos4 {
+      top: 12vh;
+      left: 90vw;
+      .star {
+        animation-delay: 600ms;
+      }
+    }
+    &.pos5 {
+      top: 11vh;
+      left: 63vw;
+      .star {
+        animation-delay: 800ms;
+      }
+    }
+    &.pos6 {
+      top: 17vh;
+      left: 36vw;
+      .star {
+        animation-delay: 1000ms;
+      }
+    }
+    &.pos7 {
+      top: 10vh;
+      left: 53vw;
+      .star {
+        animation-delay: 1200ms;
+      }
+    }
+    &.pos8 {
+      top: 2vh;
+      left: 81vw;
+      .star {
+        animation-delay: 1400ms;
+      }
+    }
+    &.pos9 {
+      top: 9vh;
+      left: 32vw;
+      .star {
+        animation-delay: 1600ms;
+      }
+    }
+    &.pos10 {
+      top: 3vh;
+      left: 15vw;
+      .star {
+        animation-delay: 1800ms;
+      }
+    }
+    &.pos11 {
+      top: 5vh;
+      left: 66vw;
+      .star {
+        animation-delay: 2000ms;
+      }
+    }
+    &.pos12 {
+      top: 15vh;
+      left: 9vw;
+      .star {
+        animation-delay: 2200ms;
+      }
+    }
+  }
+  #stars {
+    display: none;
+    &.showStars {
+      display: block;
+      animation: fadeInStars 6s linear;
+    }
+  }
+
+  .star {
+    position: absolute;
+    aspect-ratio: 1;
+    background: #dcf1ff;
+    clip-path: polygon(50% 0, 79% 90%, 2% 35%, 98% 35%, 21% 90%);
+    animation: sparkle 3s linear infinite both;
+  }
+
+  #moon {
+    position: absolute;
+    width: 1rem;
+    top: -20vh;
+    right: -20vw;
+  }
+
+  @keyframes moonSlideIn {
+    from {
+      z-index: 9;
+      width: 1rem;
+      top: -20vh;
+      right: -20vw;
+    }
+
+    to {
+      z-index: 9;
+      width: 9rem;
+      top: 14vh;
+      right: 12vw;
+    }
+  }
+
+  @keyframes sparkle {
+    0%,
+    60% {
+      background-color: #ffffff;
+      width: 100%;
+    }
+    80% {
+      background: #7df9ff;
+      width: 150%;
+    }
+
+    100% {
+      width: 100%;
+      background-color: #ffffff;
+    }
+  }
+
+  @keyframes sideToSide {
+    from {
+      left: -50%;
+    }
+
+    to {
+      left: 0%;
+    }
+  }
+  @keyframes sideToSide2 {
+    from {
+      left: 0%;
+    }
+
+    to {
+      left: -50%;
+    }
+  }
+  @keyframes shake {
+    0% {
+      margin-left: 0%;
+    }
+    25% {
+      margin-left: 0.3%;
+    }
+    50% {
+      margin-left: 0%;
+    }
+    75% {
+      margin-left: -0.7%;
+    }
+    100% {
+      margin-left: 0%;
+    }
+  }
+  @keyframes shakeL {
+    0% {
+      margin-left: 0%;
+    }
+    25% {
+      margin-left: 1%;
+    }
+    50% {
+      margin-left: -0.4%;
+    }
+    75% {
+      margin-left: 0.8%;
+    }
+    100% {
+      margin-left: 0%;
+    }
+  }
+
+  @keyframes drop {
+    0% {
+      transform: translateY(0%);
+      z-index: 1;
+    }
+    100% {
+      transform: translateY(100vh);
+    }
+  }
+
+  @keyframes slow-drop {
+    0% {
+      transform: translateY(-47vh);
+    }
+    100% {
+      transform: translateY(100vh);
+    }
+  }
+
+  @keyframes initial-drop {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(100vh);
+    }
+  }
+
+  @keyframes bgFade {
+    0% {
+      background-position: 0% 100%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
+  }
+
+  @keyframes fadeInStars {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes orbitFlame {
+    0% {
+      width: 38%;
+      height: 261%;
+      bottom: -173%;
+    }
+
+    100% {
+      height: 30%;
+      bottom: -10%;
+      width: 33%;
+    }
+  }
+</style>
+
+<div id="rocket-outer">
+  <div class="animation-container">
+    <div class="star-moon">
+      <img
+        src="./rocket/moon.svg"
+        alt="its made of cheese"
+        class="moon"
+        id="moon"
+      />
+      <div id="stars">
+        <div class="star-outer s pos1">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer s pos2">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer s pos3">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer s pos4">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer s pos5">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer s pos6">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer m pos7">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer m pos8">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer m pos9">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer m pos10">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer l pos11">
+          <div class="star"></div>
+        </div>
+        <div class="star-outer l pos12">
+          <div class="star"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cloud s initial"></div>
+    <div class="cloud m initial"></div>
+    <div class="cloud l initial"></div>
+
+    <div class="cloud s"></div>
+    <div class="cloud m"></div>
+    <div class="cloud l"></div>
+
+    <div id="rocket-container">
+      <div id="ship"></div>
+      <img src="./rocket/flame.svg" id="flame" />
+      <img src="./rocket/plume.svg" id="plume" />
+    </div>
+    <div id="exhusts">
+      <img src="./rocket/exhust1.svg" id="exhust1" />
+      <img src="./rocket/exhust2.svg" id="exhust2" />
+    </div>
+  </div>
+  <div id="text-container">
+    <h1>New Version Available!</h1>
+    <p>
+      We’re Excited to announce that a brand new version of Link is here, packed
+      with amazing updates and improvements just for you.
+    </p>
+    <a href="http:something.com">What's new in Link 3.0.1</a>
+    <button id="btnStart">Update now</button>
+  </div>
+</div>
+
+<script is:inline>
+  let stage = 0;
+  const takeOff = () => {
+    document.getElementById("rocket-container")?.classList.add("shake-flame");
+    setTimeout(() => {
+      document.getElementById("text-container")?.classList.add("drop");
+      document.getElementById("exhusts")?.classList.add("drop");
+      document.querySelectorAll(".cloud.initial").forEach((cloud) => {
+        cloud.classList.add("initial-drop");
+      });
+    }, 300);
+  };
+
+  const midFlight = () => {
+    setTimeout(() => {
+      document.querySelectorAll(".cloud:not(.initial)").forEach((cloud) => {
+        cloud.classList.add("slow-drop");
+      });
+    }, 3000);
+  };
+
+  const stage1 = () => {
+    stage = 0;
+    takeOff();
+    setTimeout(() => {
+      stage2();
+    }, 300);
+  };
+  const stage2 = () => {
+    stage = 2;
+    midFlight();
+    setTimeout(() => {
+      stage3();
+    }, 10000);
+  };
+  const stage3 = () => {
+    stage = 3;
+    //stop cloud roll
+    document.querySelectorAll(".cloud:not(.initial)").forEach((cloud) => {
+      cloud.classList.remove("slow-drop");
+    });
+
+    //fade in night
+    document.getElementById("rocket-outer").classList.add("fadeBg");
+
+    //draw in stars
+    document.getElementById("stars").classList.add("showStars");
+    //get moon
+    document.getElementById("moon").classList.add("showMoon");
+    setTimeout(() => {
+      stage4();
+    }, 3000);
+  };
+
+  const stage4 = () => {
+    document
+      .getElementById("rocket-container")
+      ?.classList.remove("shake-flame");
+    document.getElementById("flame")?.classList.add("orbit");
+    document.getElementById("plume")?.remove();
+  };
+
+  document.getElementById("btnStart")?.addEventListener("click", stage1);
+
+  addEventListener("animationend", (event) => {
+    if (event.animationName === "slow-drop") {
+      document.querySelectorAll(".cloud:not(.initial)").forEach((cloud) => {
+        console.log(cloud.getAnimations());
+        for (const animation of cloud.getAnimations()) {
+          if (animation.effect instanceof KeyframeEffect && stage < 3) {
+            //animation.cancel();
+            animation.play();
+          }
+        }
+      });
+    }
+  });
+</script>

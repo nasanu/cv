@@ -1,0 +1,96 @@
+---
+export const title = "Carousel";
+export const desc = "Scrolling imgs like its 1999";
+export const jsFile = "carousel.js";
+---
+
+<style>
+  rex-carousel {
+    width: 100%;
+    height: 10rem;
+  }
+</style>
+
+<template id="carouselItems">
+  <style>
+    div {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 100%;
+      font-size: 5rem;
+      font-weight: 900;
+    }
+    .black {
+      background-color: rgb(0, 0, 0);
+      color: rgb(85, 85, 85);
+    }
+    .white {
+      background-color: white;
+      color: rgb(56, 56, 56);
+    }
+    .pink {
+      background-color: pink;
+      color: #09c;
+    }
+    .blue {
+      background-color: #09c;
+      color: rgb(255, 0, 255);
+    }
+  </style>
+  <div class="black">0</div>
+  <div class="white">1</div>
+  <div class="pink">2</div>
+  <div class="blue">3</div>
+  <div class="black">4</div>
+  <div class="white">5</div>
+  <div class="pink">6</div>
+  <div class="blue">7</div>
+  <div class="black">8</div>
+  <div class="white">9</div>
+  <div class="pink">10</div>
+  <div class="blue">11</div>
+  <div class="black">12</div>
+  <div class="white">13</div>
+  <div class="pink">14</div>
+  <div class="blue">15</div>
+  <div class="black">16</div>
+  <div class="white">17</div>
+  <div class="pink">18</div>
+  <div class="blue">19</div>
+  <div class="black">20</div>
+  <div class="white">21</div>
+  <div class="pink">22</div>
+  <div class="blue">23</div>
+</template>
+
+<h1>{title}</h1>
+
+<div class="desc">
+  dis ov dis ting
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-carousel template="carouselItems"></rex-carousel>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import {rex-carousel} from TBA;
+  
+  //use it in your HTML
+  <rex-carousel>someString</rex-carousel>
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+</div>
+
+<script>
+  import "../lib/carousel";
+</script>

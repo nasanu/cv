@@ -1,0 +1,293 @@
+---
+export const title = "Input";
+export const jsFile = "input.js";
+---
+
+<h1>{title}</h1>
+<div class="desc">
+  A generic input styled for <a
+    href="https://rex.rakuten.design/en/design/components/"
+    target="_blank">ReX</a
+  >. This component fires <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
+    target="_blank"
+  >
+    CustomEvents
+  </a> on <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Element/input_event"
+    target="_blank"
+  >
+    input</a
+  >, <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Element/focusin_event"
+    target="_blank">focusin</a
+  > &
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Element/focusout_event"
+    target="_blank">focusout</a
+  >.
+  <br /><br />
+</div>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+  {`
+// import the component
+import {rex-input} from TBA;
+
+//use it in your HTML
+<rex-input type="text" name="fName" placeholder="input stuff"></rex-input>
+
+//add an event listener to get the input, this is a custom event 
+//event name is the prop name + Event
+document.addEventListener("fNameEvent", ((e: CustomEvent) => {
+    //do something with the output
+    //custom events hold data in the detail property
+    console.log(e.detail);
+  }) as EventListener);
+`}
+</code></pre>
+</div>
+
+<h3>Playground</h3>
+<div class="example-wrap playground">
+  <div class="props-table">
+    <div class="prop">
+      <div class="name">type</div>
+      <div class="value">
+        <select name="propType" id="propType">
+          <option>text</option>
+          <option>number</option>
+        </select>
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">name</div>
+      <div class="value">
+        <input id="propName" type="text" value="fname" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">value</div>
+      <div class="value">
+        <input id="propValue" type="text" value="" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">title</div>
+      <div class="value">
+        <input id="propTitle" type="text" value="demo input" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">required</div>
+      <div class="value">
+        <input id="propRequired" type="text" value="This field is required" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">placeholder</div>
+      <div class="value">
+        <input id="propPlaceholder" type="text" value="placeholder" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">error</div>
+      <div class="value">
+        <input id="propError" type="text" value="" />
+      </div>
+    </div>
+    <div class="prop">
+      <div class="name">footer</div>
+      <div class="value">
+        <input id="propFooter" type="text" value="footer text" />
+      </div>
+    </div>
+  </div>
+  <div class="prop-output">
+    <div id="liveDemo"></div>
+    <hr />
+    <div id="liveCode"><code></code></div>
+    <hr />
+    <div id="outputbox">
+      <legend></legend>
+      <div class="name">trigger</div>
+      <div class="value event"></div>
+      <div class="name">value</div>
+      <div class="value data"></div>
+    </div>
+  </div>
+</div>
+
+<section class="data">
+  <div class="title"><h3>Data In (props)</h3></div>
+  <div class="name">type</div>
+  <div class="value">Sets the type of the field: text | number</div>
+  <div class="name">value</div>
+  <div class="value">Sets the value shown in the input</div>
+  <div class="name">name</div>
+  <div class="value">
+    The name of the input used primarily for the <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
+      target="_blank"
+    >
+      CustomEvent
+    </a> that is fired on <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Element/input_event"
+      target="_blank"
+    >
+      input
+    </a>
+  </div>
+  <div class="name">title</div>
+  <div class="value">The text that appears above the input</div>
+  <div class="name">footer</div>
+  <div class="value">The text that appears below the input</div>
+  <div class="name">placeholder</div>
+  <div class="value">Text that appears only when the input is empty.</div>
+  <div class="name">required</div>
+  <div class="value">
+    If there is a value given to this prop then this input is considered a
+    required field. If value is empty on either input or focus out then the
+    sting entered here will be showen as an error
+  </div>
+  <div class="name">error</div>
+  <div class="value">
+    This prop sets the error state of the input. If this is missing or an empty
+    string then the input has no error, otherwise the error class is added and
+    the text in this prop is displayed in the footer.
+  </div>
+  <div class="title"><h3>Data Out (events)</h3></div>
+
+  <div class="name">name + Event</div>
+  <div class="value">
+    This event is fired on <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Element/input_event"
+      target="_blank"
+    >
+      input</a
+    >, <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Element/focusin_event"
+      target="_blank">focusin</a
+    > &
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Element/focusout_event"
+      target="_blank">focusout</a
+    > events.
+    <br />
+    The name of the event is the value of the component's name prop + "Event". So
+    if you use <code>
+      &lt;rex-input type="text" name="fName" placeholder="input
+      stuff"&gt;&lt;/rex-input&gt;
+    </code> you will need to listen to the "fNameEvent" event: <code>
+      document.addEventListener("fNameEvent"...
+    </code>
+  </div>
+</section>
+
+<script>
+  import "../lib/input.js";
+
+  //event for example output
+  document.addEventListener("fNameEvent", ((e: CustomEvent) => {
+    //get element to display output
+    const output: any = document.querySelector("#Input-wrap #inputOutput");
+    if (output) {
+      //assign output from our text input to display on the page
+      output.innerText = e.detail.value;
+    }
+  }) as EventListener);
+
+  //playground code
+  const liveDemo = () => {
+    const rexComponent = document.createElement("rex-input");
+    const demo = document.querySelector("#Input-wrap #liveDemo");
+    if (demo) {
+      demo.innerHTML = "";
+    }
+
+    //props
+    const type = (
+      document.querySelector("#Input-wrap #propType") as HTMLSelectElement
+    ).options[
+      (document.querySelector("#Input-wrap #propType") as HTMLSelectElement)
+        .selectedIndex
+    ].value;
+    if (type) {
+      rexComponent.setAttribute("type", type);
+    }
+    const name = (
+      document.querySelector("#Input-wrap #propName") as HTMLInputElement
+    ).value;
+    if (name) {
+      rexComponent.setAttribute("name", name);
+    }
+    const required = (
+      document.querySelector("#Input-wrap #propRequired") as HTMLInputElement
+    ).value;
+    if (required) {
+      rexComponent.setAttribute("required", required);
+    }
+    const placeholder = (
+      document.querySelector("#Input-wrap #propPlaceholder") as HTMLInputElement
+    ).value;
+    if (placeholder) {
+      rexComponent.setAttribute("placeholder", placeholder);
+    }
+    const error = (
+      document.querySelector("#Input-wrap #propError") as HTMLInputElement
+    ).value;
+    if (error) {
+      rexComponent.setAttribute("error", error);
+    }
+    const title = (
+      document.querySelector("#Input-wrap #propTitle") as HTMLInputElement
+    ).value;
+    if (title) {
+      rexComponent.setAttribute("title", title);
+    }
+    const footer = (
+      document.querySelector("#Input-wrap #propFooter") as HTMLInputElement
+    ).value;
+    if (footer) {
+      rexComponent.setAttribute("footer", footer);
+    }
+    const value = (
+      document.querySelector("#Input-wrap #propValue") as HTMLInputElement
+    ).value;
+    if (value) {
+      rexComponent.setAttribute("value", value);
+    }
+
+    (
+      document.querySelector("#Input-wrap #liveCode code") as HTMLElement
+    ).innerText = rexComponent.outerHTML;
+    demo?.appendChild(rexComponent);
+
+    (document.querySelector(
+      "#Input-wrap #outputbox legend"
+    ) as HTMLDivElement)!.innerText = name + "Event";
+
+    document.addEventListener(name + "Event", (e) => {
+      (document.querySelector(
+        "#Input-wrap #outputbox .value.event"
+      ) as HTMLDivElement)!.innerText = (e as CustomEvent).detail.type;
+      (document.querySelector(
+        "#Input-wrap #outputbox .value.data"
+      ) as HTMLDivElement)!.innerText = (e as CustomEvent).detail.value;
+    });
+  };
+
+  // add events needed to live update props on demo
+  document
+    .querySelectorAll("#Input-wrap .props-table input")
+    .forEach((item) => {
+      item.addEventListener("input", liveDemo);
+    });
+  document
+    .querySelectorAll("#Input-wrap .props-table select")
+    .forEach((item) => {
+      item.addEventListener("change", liveDemo);
+    });
+
+  liveDemo();
+</script>

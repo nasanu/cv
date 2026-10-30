@@ -1,0 +1,387 @@
+---
+export const title = "Search Select OLD";
+---
+
+<h1>{title}</h1>
+
+<div class="desc">
+  desc...
+  <br /><br />
+</div>
+
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import {rex-theme} from TBA;
+  
+  //use it in your HTML
+  <rex-theme></rex-theme>
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+  <br />
+
+  <div class="search-select">
+    <rex-input
+      id="searchSelect"
+      placeholder="search select"
+      name="searchSelect"
+      title="up? down? Who knows"
+      footer="what..."></rex-input>
+    <div class="list-wrap" tabindex="2">
+      <div class="inner"></div>
+    </div>
+  </div>
+
+  <style>
+    .search-select rex-input {
+      position: relative;
+      z-index: 99;
+    }
+    .search-select {
+      position: relative;
+      z-index: 99;
+      top: 0;
+      &.above .list-wrap {
+        bottom: 0;
+      }
+
+      .list-wrap {
+        outline: none;
+        transition: opacity 0.2s linear;
+        /* maybe just restore these for desktop or make then tons better */
+        /* max-height 0.3s ease-out,
+        height 0.3s ease-out; */
+        /* top 0.3s ease-out; */
+        pointer-events: none;
+        &.open {
+          opacity: 1;
+          z-index: 9;
+          pointer-events: all;
+        }
+        padding: 0.3rem 0.5rem;
+        opacity: 0;
+        position: absolute;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+
+        border-radius: var(--borderRadius);
+        background-color: var(--dropDownBG);
+        overflow-y: auto;
+
+        .select-item {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          padding: 0.3rem 1rem;
+          border-radius: var(--borderRadius);
+
+          &.selected {
+            background-color: var(--menuHover);
+            color: var(--error);
+          }
+        }
+      }
+    }
+  </style>
+
+  <script>
+    //generate test items
+    const itemsOG: any[] = [];
+    for (let i = 0; i < 500; i++) {
+      itemsOG.push({ name: "item" + i, value: i });
+    }
+
+    let filtered = itemsOG;
+    const close = () => {
+      wrap.classList.remove("open");
+      input.blur();
+    };
+    const listener = (e) => {
+      wrap.classList.add("open");
+
+      const { value, type } = (e as CustomEvent).detail;
+      if (type === "input") {
+        filtered = itemsOG.filter((item) => {
+          return item.name.indexOf(value) >= 0;
+        });
+        scrollItems();
+      }
+      if (type !== "focusout") {
+        setPosition();
+      } else {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const listener2 = (e) => {
+      const { type } = e as Event;
+      if (e.type === "click" && e.target.classList.contains("select-item")) {
+        const code = (e.target as HTMLDivElement).getAttribute("code");
+
+        if (!code) {
+          document
+            .querySelector(".search-select rex-input")!
+            .setAttribute("value", e.target.textContent);
+          close();
+        }
+      } else if (type === "focusin" || type === "click") {
+        wrap.classList.add("open");
+        (
+          document.querySelector(".search-select rex-input") as HTMLElement
+        ).focus();
+      } else if (type === "focusout") {
+        if (!document.querySelector(".search-select:focus-within")) {
+          close();
+        }
+      }
+
+      //setPosition();
+    };
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const wrap = document.querySelector(".list-wrap")! as HTMLDivElement;
+    const input = document.querySelector("#searchSelect")! as HTMLElement;
+
+    const addSelect = (event) => {
+      let e;
+      if (event.target) {
+        e = event.target;
+      } else {
+        e = event;
+      }
+      removeAllSelect(wrap.querySelectorAll(".select-item"));
+      e.classList.add("selected");
+      wrap.setAttribute("data-selected", e.dataset.index);
+    };
+    const removeSelect = (e) => {
+      (e.target as any).classList.remove("selected");
+    };
+
+    const removeAllSelect = (items) => {
+      items.forEach((item) => {
+        (item as any).classList.remove("selected");
+      });
+    };
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".search-select rex-input:focus")) {
+        close();
+      }
+    });
+    document.addEventListener("searchSelectEvent", listener);
+    // document
+    //   .querySelector(".search-select")!
+    //   .addEventListener("focusin", listener2);
+    document
+      .querySelector(".search-select")!
+      .addEventListener("focusout", listener2);
+
+    const scrollTo = (top, direction) => {
+      if (
+        direction === "down" &&
+        top - wrap.scrollTop + itemHeight + 0.6 * rem >
+          wrap.getBoundingClientRect().height + itemHeight
+      ) {
+        wrap.scrollTo({
+          top: top,
+          behavior: "instant",
+        });
+      }
+
+      if (direction === "up" && top - wrap.scrollTop < itemHeight) {
+        wrap.scrollTo({
+          top: wrap.scrollTop - (displayed() - 0) * itemHeight,
+          behavior: "instant",
+        });
+        const newSelected = Number(wrap.dataset.selected) - 1;
+        if (wrap.querySelector(`[data-index="${newSelected}"]`)) {
+          addSelect(wrap.querySelector(`[data-index="${newSelected}"]`));
+        } else {
+          wrap.setAttribute("data-selected", newSelected.toString());
+        }
+      }
+    };
+
+    window.addEventListener("keydown", (event) => {
+      if (wrap.classList.contains("open")) {
+        //enter/return\select
+        if (event.key === "Enter") {
+          (wrap.querySelector(".selected") as HTMLDivElement).click();
+        }
+
+        //arrow down
+        if (event.key === "ArrowDown") {
+          let currentItem = wrap.querySelector(
+            ".select-item.selected + .select-item"
+          );
+          removeAllSelect(wrap.querySelectorAll(".select-item"));
+
+          addSelect(
+            currentItem ? currentItem : wrap.querySelector(".select-item")
+          );
+
+          scrollTo((wrap.querySelector(".selected") as any).offsetTop, "down");
+        }
+
+        //arrow up
+        if (event.key === "ArrowUp") {
+          let currentItem = wrap.querySelector(
+            ".select-item:has(+ .select-item.selected)"
+          );
+          removeAllSelect(wrap.querySelectorAll(".select-item"));
+          addSelect(
+            currentItem
+              ? currentItem
+              : wrap.querySelector(".select-item:first-child")
+          );
+          if (!currentItem) {
+            scrollTo((wrap.querySelector(".selected") as any).offsetTop, "up");
+          }
+        }
+      }
+    });
+
+    let height = 0;
+    let openBelow = true;
+
+    const itemHeight = rem * 3.5;
+
+    const setOuterHeight = () => {
+      if (wrap.classList.contains("open")) {
+        wrap.style.height = height + "px";
+        scrollItems();
+      } else {
+        wrap.style.height = "0px";
+      }
+    };
+
+    const heightfn = (space) => {
+      //height from pos
+      return (
+        Math.max(
+          Math.min(
+            Math.floor(space / itemHeight) * itemHeight,
+            filtered.length * itemHeight
+          ),
+          itemHeight
+        ) +
+        rem * 0.6
+      );
+    };
+
+    const spaceTop = () => {
+      return (
+        input.getBoundingClientRect().top -
+        window.visualViewport!.offsetTop -
+        rem
+      );
+    };
+
+    const spaceBot = () => {
+      return (
+        window.visualViewport!.height -
+        input.getBoundingClientRect().bottom -
+        rem
+      );
+    };
+
+    const setPosition = () => {
+      wrap.style.top = "0px";
+      if (spaceTop() - 3 * rem > spaceBot()) {
+        //biased to pick space below if almost 50 -50
+        openBelow = false;
+        height = heightfn(spaceTop());
+
+        if (wrap.classList.contains("open")) {
+          wrap.style.top = -height + "px";
+        }
+      } else {
+        openBelow = true;
+        wrap.style.top = "6rem";
+        height = heightfn(spaceBot());
+      }
+      document.querySelector(".search-select")!.className = "search-select";
+      document
+        .querySelector(".search-select")!
+        .classList.add(openBelow ? "below" : "above");
+
+      setOuterHeight();
+    };
+
+    setPosition();
+
+    window.visualViewport!.addEventListener("resize", setPosition);
+    window.visualViewport!.addEventListener("scroll", setPosition);
+
+    const displayed = () => {
+      return Math.floor(parseInt(wrap.style.height) / itemHeight);
+    };
+
+    const scrollItems = () => {
+      let scrollPos = document.querySelector(".list-wrap")!.scrollTop;
+      const hiddenAboveIndex = Math.floor(scrollPos / itemHeight);
+      const middle = hiddenAboveIndex + displayed() / 2;
+      buildItems(
+        middle - displayed() / 2,
+        Math.floor(Math.min(middle + displayed() / 2, filtered.length))
+      );
+    };
+
+    const buildItems = (start, end) => {
+      const inner = document.querySelector(
+        ".list-wrap .inner"
+      )! as HTMLDivElement;
+      const selected = wrap.dataset.selected;
+      inner.innerHTML = "";
+      if (!filtered.length) {
+        filtered.push({ name: "yeah nah bro", value: "-1", code: "404" });
+      }
+
+      filtered.forEach((item, index) => {
+        if (index >= start && index <= end) {
+          const newItem: HTMLDivElement = document.createElement("div");
+          newItem.style.height = itemHeight + "px";
+          newItem.setAttribute("data-value", item.value);
+          newItem.setAttribute("data-index", index.toString());
+          newItem.textContent = item.name;
+          newItem.className = "select-item";
+          newItem.onmouseenter = addSelect;
+          newItem.onmouseleave = removeSelect;
+          if (item.code) {
+            newItem.setAttribute("code", item.code);
+            newItem.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            };
+          } else {
+            newItem.onclick = listener2;
+          }
+          if (Number(selected) === index) {
+            newItem.classList.add("selected");
+          }
+
+          inner.appendChild(newItem);
+        }
+      });
+
+      const paddingTop =
+        filtered.length > displayed() - 1 ? start * itemHeight : 0;
+      inner.style.paddingTop = paddingTop + "px";
+      const paddingBot =
+        filtered.length > displayed()
+          ? (filtered.length - end) * itemHeight
+          : 0;
+      inner.style.paddingBottom = paddingBot + "px";
+    };
+
+    wrap.onscroll = scrollItems; //making this fire more slowly (using a debounce) will cause the scroll to skip elements
+    //buildItems(0, displayed());
+  </script>
+</div>

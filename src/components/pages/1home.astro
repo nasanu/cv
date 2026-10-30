@@ -1,0 +1,139 @@
+---
+export const title = "Home";
+---
+
+<section>
+  <h1>
+    You've somehow found the unofficial REX web components library. Good for
+    you.
+  </h1><br />
+  This is all about <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"
+    target="_blank">web components</a
+  > and simplicity. Styling is based on <a
+    href="https://rex.rakuten.design/en/design/components/"
+    target="_blank">ReX Guidelines</a
+  > where possible and extra functionality is kept to a minimum. You are encrouaged
+  download each component individually and customise it to your specific needs as
+  you see fit.<br />
+
+  <h3>This means <em>NO NPM INSTALL</em>. Why?</h3>
+  When you install a library via NPM what happens? It gets thrown into the node_modules
+  folder and you import it into your code from there. Which means your options for
+  modifications are limited. You cannot modify what is inside node_modules because
+  for one you usually do not publish that folder and two, what happens when that
+  library updates? All your modified code is gone.
+  <br /><br />
+  This encrouages developers to tell designers that they need to only include in
+  designs what the developers chosen library can do, limiting both functional and
+  visual design.
+  <br /><br />
+  This library of web components is specifically designed to be modified and altered.
+  Download each component.js file and rewrite the CSS, alter the JavaScript and HTML
+  to do what your specific design calls for.
+  <br /><br />
+
+  Repo: <a
+    target="_blank"
+    href="https://ghe.rakuten-it.com/ssed/rex-web-components/"
+    >https://ghe.rakuten-it.com/ssed/rex-web-components/</a
+  >
+</section>
+<br />
+<section class="highlight">
+  <h3>① Download</h3>
+
+  <pre><code>{`
+    Click the download icon at the top of each page
+
+    OR 
+    
+    //download directly from the repo:
+    https://ghe.rakuten-it.com/ssed/rex-web-components/tree/main/src/components/lib
+
+`}</code></pre>
+
+  <h3>② Import</h3>
+  <pre><code>{`
+
+    import "idk where you saved it/rex-component.js"
+    
+    `}</code></pre>
+
+  <h3>③ Use</h3>
+  <pre><code>{`
+  
+  <rex-component type="text" name="fName" placeholder="stuff"></rex-component>
+ 
+  `}</code></pre>
+  <br />
+
+  Basically that is it. See each component for specific instructions.
+  <br />
+  <br />
+  <section class="details">
+    <h3>What you want actual details?... K. Fine.</h3>
+
+    This is a <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"
+      target="_blank">web components</a
+    > library. This means that when you import a component its not like importing
+    say a React Component. Here is the breakdown Barney style:
+    <br />
+    <div class="sub">
+      <h4>① Download</h4>
+      This is simply pulling the library from some random location on the internet
+      and placing it in the file structure of your own codebase. Thats it.
+      <h4>② Import</h4>
+      Here the import is actaully running the JS associated with the import. In the
+      case with <a href="#Input" target="_blank">rex-input</a> this will cause the
+      rex-input.js file to be run. The only important thing here is that this will
+      add the "rex-input" element to the document element making it available in
+      all of your HTML.
+
+      <h4>③ Use</h4>
+      Use it in HTML. This is a HTML element, just like a normal HTML tag. For example:
+      <br />
+      <code>&lt;rex-input&gt;</code>
+      <br />Check the page for each component to see what props do what.
+    </div>
+  </section>
+  <br />
+  <h3>Getting data out?...</h3>
+  This is a library based on <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"
+    target="_blank">web components</a
+  >, as such getting data out is handled via <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
+    target="_blank">Custom Events</a
+  >. In the following example the <a href="#Input" target="_blank"
+    >rex-input
+  </a> component is passed "fName" for its name paramater. For components that generate
+  events, the name of the custom event you listen to is the components name paramater
+  plus "Event", so in this case you listen to the "fNameEvent". It also needs to
+  be noted that in <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
+    target="_blank">Custom Events</a
+  > data is passed in the detail property of the event object.
+  <br />
+  <br />
+  <div class="code-wrap">
+    <pre><code class="usage language-javascript">
+    {`
+  
+  //use it in your HTML
+  <rex-input type="text" name="fName" placeholder="input stuff"></rex-input>
+  
+  //add an event listener to get the input, this is a custom event 
+  //event name is the prop name + Event
+  document.addEventListener("fNameEvent", ((e: CustomEvent) => {
+      //do something with the output
+      //custom events hold data in the detail property
+      console.log(e.detail);
+    }) as EventListener);
+  `}
+  </code></pre>
+  </div>
+  <br />
+  See each componet for more specific details
+</section>

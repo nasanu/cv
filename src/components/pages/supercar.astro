@@ -1,0 +1,53 @@
+---
+export const title = "Supercar";
+export const desc = "Wedge shaped and endlessly driving";
+export const jsFile = "supercar.js";
+---
+
+<style>
+  rex-supercar {
+    width: 100%;
+    max-width: 60rem;
+  }
+</style>
+
+<h1>{title}</h1>
+
+<div class="desc">
+  An isometric Ferrari Testarossa driving along an endless city highway, with traffic, overhead signs,
+  tower blocks, retro video game billboards and a sidewalk with a few food vendors, bus stops, parking meters and pedestrians, and a car park beside it. The whole scene is built from CSS 3D transformed elements and a little JS, no image files.
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-supercar></rex-supercar>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import "../lib/supercar";
+
+  //use it in your HTML
+  <rex-supercar speed="320" color="#f2f2f6"></rex-supercar>
+
+  //attributes
+  //  speed  - how fast the road scrolls (default 320)
+  //  color  - body colour (default #f2f2f6, white; #d4001a is Rosso Corsa red)
+  //  paused - freezes the animation
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+    The world is a flat plane tilted with <code>rotateX(55deg) rotateZ(45deg)</code> to give the isometric view. The car
+    is built from tilted panels and cuboids placed in that 3D space. The road never moves; its surface, lane dashes
+    and guardrail posts are repeating textures shifted by one period at a time so the loop is seamless, and the lamps,
+    buildings, traffic, signs and billboards travel round a ring. The billboard posters are pixel art painted onto small canvases at start up.
+  </section>
+</div>
+
+<script>
+  import "../lib/supercar";
+</script>

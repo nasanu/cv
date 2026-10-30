@@ -1,0 +1,93 @@
+﻿---
+export const title = "CV Test";
+export const desc = "A Countach with spinning wheels";
+export const jsFile = "lambo.js";
+---
+
+<style>
+  rex-lambo {
+    width: 100%;
+  }
+</style>
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This is around 3hrs work in HTML, CSS and JS (a half finished project, content is to be added later, this is the
+  visual framework). When we have projects with 40+ members taking half a decade.... Its not my place to cause trouble
+  (never stopped me though) but be realistic about this. Do we really have the right people in the right places? Is it
+  really the best practice to have people with zero experience in making apps deciding ALL decisions about how apps are
+  made and designed (which is exactly what happens in practice)? Is it right to have the experts at the bottom and those
+  with vastly less experience and talent above them dictating? I think its crystal clear to see that Link doesn't stand
+  on its own and AI (Gemini) agrees "The user base of the Rakuten Link app closely mirrors the subscriber count of
+  Rakuten Mobile, because activation and use of the app are heavily tied to the Rakuten Saikyo Plan". Exactly. Who
+  believes that anyone would use Link if that tie was cut? And if subscribers would plumet, why? People use other apps
+  without holding their phone plans value hostage, so why does Link need it?... Easy answer, its terrible. Users need to
+  be forced to use it, else they would rather not.
+  <br /><br />
+  Gemini again: "If using the Rakuten Link app had no effect on the Rakuten Saikyo Plan—meaning it no longer offered the
+  primary benefit of free unlimited domestic calls and SMS—the app's usage numbers would likely plummet drastically." Is
+  that what we are working for? Or should we aim for better? Right now all I ever get told is to do the minimum and make
+  tickets go away as quickly and as dirty as possible.
+  <br /><br />
+  <a href="./lambo.html" target="_blank">View the rex-lambo full screen on a black page</a>
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-lambo></rex-lambo>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import "../lib/lambo";
+
+  //use it in your HTML
+  <rex-lambo src="./lambo-transparent.png" speed="0.2"></rex-lambo>
+
+  //attributes
+  //  src    - image url (default ./lambo-transparent.png)
+  //  avatar - photo for the player profile billboard (default ./me.jpg)
+  //  speed  - seconds per wheel revolution (default 0.2, smaller is faster)
+  //  paused - freezes the wheels, road and billboards
+  //  fill   - runs full screen in the box it is given (see the downloadable bundle's index.html)
+  //
+  //  The car sits parked until a key press or tap (not Tab, Shift, Escape, F keys or a held-down
+  //  key), drives to a billboard, stops, and carries on to the next one at the following key press
+  //  or tap. A swipe left does the same as a tap, and a swipe right drives round to the previous
+  //  billboard, straight past the others. The mini billboards on the progress strip drive straight to
+  //  that stop, TURBO doubles
+  //  the speed, and the speaker switches the music on and off.
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+    Each wheel is a square box with a round rim inside it. The box is rotated and squashed with
+    <code>rotate()</code> and <code>scaleX()</code> so the circle becomes the same tilted ellipse as the wheel in the picture.
+    Inside, a spokes and hub layer turns with a CSS keyframe animation, so it spins within the squashed shape and keeps the
+    perspective. The road is a long flat strip turned with <code>rotateZ()</code> and laid back with <code
+      >rotateX()</code
+    > inside a CSS <code>perspective</code>, so the browser foreshortens the grid. Only its background position
+    animates, one road block per loop, so it never ends. A pixel art billboard is added on the far side of the road each
+    time the car sets off, and the car brakes to a stop beside it. Each is a tiny 64 x 32 canvas painted in JS and
+    scaled up with <code>image-rendering: pixelated</code>, stood upright inside the same tilted 3D space as the road so
+    it gets the same perspective, and slid along at road speed. A retrowave highway barrier runs along the far edge of
+    the road: a tall dark indigo wall with a neon magenta top, a glowing cyan band and lamps, with a two tube neon guard
+    rail on top. Each part is a set of CSS gradients repeated along a long upright face and scrolled by sliding its
+    background. The sky fades from black at the top to deep purple at the horizon, with faint stars twinkling on a
+    canvas. A big retrowave moon hangs behind the city: a CSS gradient disc with horizontal slits cut through its lower
+    half by a mask, and a soft halo. A wireframe skyline stands in the distance on the far side of the road: plain boxes
+    whose faces are neon outlines in the same tilted 3D space, in a pattern that repeats so it can scroll with the road
+    forever. Now and then a shooting star crosses the sky. Once the car has set off, music plays and an analyser reads
+    its spectrum, so the windows of the skyline light up from the ground as a graphic equaliser (without music they flip
+    on and off at random). To keep it light, nothing is drawn while the component is scrolled out of view or paused, and
+    a frame is only redrawn when something has moved.
+  </section>
+</div>
+
+<script>
+  import "../lib/lambo";
+</script>

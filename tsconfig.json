@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "noEmit": true,
+    "noImplicitAny": false
+  },
+  "include": ["src/", "tests/"]
+}

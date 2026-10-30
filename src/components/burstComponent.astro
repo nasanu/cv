@@ -1,0 +1,142 @@
+---
+const { particleCount, duration } = Astro.props;
+const aniTime = duration + "s";
+const icons = ["cc", "comment", "disk", "heart", "mail", "plane"];
+---
+
+<div class="particles">
+  <div class="confetti-container"></div>
+</div>
+
+<style define:vars={{ aniTime }}>
+  .particles {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+  .confetti-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    .particle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      transform: rotate(0);
+      opacity: 1;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-color: aqua;
+      border-radius: 50%;
+      &.finished {
+        transition: all var(--aniTime) ease-out;
+        opacity: 0;
+      }
+      /* &.cc {
+        background-image: url("/icons/cc.svg");
+      }
+      &.comment {
+        background-image: url("/icons/comment.svg");
+      }
+      &.disk {
+        background-image: url("/icons/disk.svg");
+      }
+      &.heart {
+        background-image: url("/icons/heart.svg");
+      }
+      &.mail {
+        background-image: url("/icons/mail.svg");
+      }
+      &.plane {
+        background-image: url("/icons/plane.svg");
+      } */
+    }
+  }
+</style>
+
+<script define:vars={{ particleCount, duration, icons }} is:inline>
+  addEventListener("load", () => {
+    const container = document.querySelector(".confetti-container");
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.initialX = x;
+        this.initialY = y;
+        this.angle = random(0, Math.PI * 2);
+        this.speed = random(0.95, 1.05);
+        this.finished = false;
+      }
+      render() {
+        const element = document.createElement("div");
+        element.className =
+          "particle " + icons[Math.floor(Math.random() * icons.length)];
+        element.id = this.id;
+        element.style.left = this.x + "px";
+        element.style.top = this.y + "px";
+        container.appendChild(element);
+        this.calcFinalPosition();
+      }
+      calcFinalPosition() {
+        while (
+          Math.sqrt(
+            Math.abs(
+              (this.initialX - this.x) * (this.initialX - this.x) +
+                (this.initialY - this.y) * (this.initialY - this.y)
+            )
+          ) < 100
+        ) {
+          this.x += Math.cos(this.angle);
+          this.y += Math.sin(this.angle);
+        }
+        requestAnimationFrame(() => {
+          const thisParticle = document.getElementById(this.id);
+          thisParticle.style.left = this.x * this.speed + "px";
+          //thisParticle.style.top = this.y * this.speed * 0.5 + "px"; // added .6 to make it oval and not a circle
+          thisParticle.style.top = this.y * this.speed + "px"; // a circle
+          thisParticle.classList.add("finished");
+          thisParticle.style.transform = "rotate(360deg)";
+        });
+        setTimeout(() => {
+          if (document.getElementById(this.id))
+            document.getElementById(this.id).remove();
+        }, duration * 1000);
+      }
+    }
+
+    const particles = [];
+
+    const run = (event) => {
+      let particle;
+      const fixedRnd = random(0.55, 1.45);
+      for (var i = 0; i < particleCount; i++) {
+        if (event.pageX !== 0 && event.pageY !== 0) {
+          particle = new Particle(
+            event.x - container.getBoundingClientRect().x,
+            event.y - container.getBoundingClientRect().y
+          );
+        } else {
+          particle = new Particle(
+            (container.getBoundingClientRect().width * fixedRnd) / 2,
+            (container.getBoundingClientRect().height * fixedRnd) / 2
+          );
+        }
+
+        particle.id = "particle" + particles.length;
+        particles.push(particle);
+        particle.render();
+      }
+    };
+
+    container?.addEventListener("click", run);
+  });
+</script>

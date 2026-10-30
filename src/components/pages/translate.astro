@@ -1,0 +1,65 @@
+---
+export const title = "Translate";
+export const jsFile = "translate.js";
+---
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This component takes a key value set between its opening and closing tags,
+  matches that key to a JSON language file then outputs the value to the HTML.
+  It is used in conjunction with the <a href="#Language%20Selector"
+    >language selector</a
+  > that allows users to change the display language.
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-translate>welcome</rex-translate>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">{`
+  // import the component
+  import {rex-translate} from TBA;
+  
+  //use it in your HTML
+  <rex-translate>welcome</rex-translate>
+  `}</code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+    <em class="alert"
+      >This is a work in progress, future versions will not require manual
+      editing or a downalod of the file</em
+    >
+
+    This componet requires some manual setup as it can accomodate any number of
+    languages and translations. Editing of the <code>"translate.js"</code> script
+    is a requirment for this one. Follow these steps (in the translate.js file):
+    <div class="sub">
+      <h4>① Install</h4>
+
+      Download <a href="/translate.js" download="translate.js">translate.js</a>
+      and place it in your apps filesystem, just like any other JS file.
+
+      <h4>② Import <small>in JS where you want to use it</small></h4>
+      <pre><code>{`
+  import "idk where you saved it/translate.js"
+      `}</code></pre>
+
+      <h4>③ Customise <small>translate.js file</small></h4>
+      At the top of the file are the imports for the language JSON files
+      <br />
+      <pre><code>{`
+  import english from "../../translations/en.json";
+  import japanese from "../../translations/ja.json";
+  import french from "../../translations/fr.json";
+        `}</code></pre>
+    </div>
+  </section>
+</div>
+
+<script>
+  import "../lib/translate";
+</script>

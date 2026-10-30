@@ -1,0 +1,43 @@
+---
+export const title = "Search Select";
+export const jsFile = "searchSelect.js";
+
+//generate test items
+const items: any[] = [];
+for (let i = 0; i < 100000; i++) {
+  items.push({ name: "item" + i, value: i });
+}
+---
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This is buggy af, needs work but I could not be fucked. You can see the heavy lifting is done, quickly supports
+  listing and searching within a million items, with keyboard events.
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-searchSelect items={JSON.stringify(items)}></rex-searchSelect>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import {rex-searchSelect} from TBA;
+  
+  //use it in your HTML
+  <rex-searchSelect items={JSON.stringify(items)}></rex-searchSelect>
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+  <br />
+
+  <script>
+    import "../lib/searchSelect.js";
+  </script>
+</div>

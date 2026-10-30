@@ -1,0 +1,249 @@
+---
+import Layout from "../layouts/Layout.astro";
+//const components = await Astro.glob("../components/pages/*.astro");
+
+import Settings from "../components/settings.astro";
+import ViewButton from "src/components/viewButton.astro";
+import Dialog from "src/components/dialog.astro";
+const components = Object.values(
+  import.meta.glob("../components/pages/*.astro", { eager: true })
+);
+---
+
+<script>
+  onhashchange = () => {
+    changeContent(decodeURI(window.location.hash.replace("#", "")));
+  };
+
+  document.querySelector("nav .gfx")?.addEventListener("click", () => {
+    document.querySelector("nav")?.classList.toggle("open");
+  });
+
+  document
+    .querySelector(".component-wrap")
+    ?.setAttribute("data-selected", "true");
+
+  document.querySelector("nav li")?.setAttribute("data-selected", "true");
+
+  function changeContent(title: any) {
+    if (title) {
+      //window.location.hash = title;
+      //page body
+      document
+        .querySelectorAll(`.component-wrap:not([data-title="${title}"])`)
+        .forEach((item) => {
+          item.setAttribute("data-selected", "false");
+        });
+
+      document
+        .querySelector(`.component-wrap[data-title="${title}"]`)
+        ?.setAttribute("data-selected", "true");
+
+      //menu
+      document
+        .querySelectorAll(`nav li:not([data-title="${title}"])`)
+        .forEach((item) => {
+          item.setAttribute("data-selected", "false");
+        });
+
+      document
+        .querySelector(`nav li[data-title="${title}"]`)
+        ?.setAttribute("data-selected", "true");
+    } else {
+      console.error("no title; component cannot be displayed");
+    }
+    dispatchEvent(
+      new CustomEvent("navigationChanged", {
+        bubbles: true,
+        detail: title,
+      })
+    );
+  }
+
+  if (window.location.hash) {
+    changeContent(decodeURIComponent(window.location.hash).replace("#", ""));
+  }
+
+  document.querySelectorAll("[data-menu-item]").forEach((item) => {
+    (item as HTMLLIElement).addEventListener(
+      "click",
+      () => (window.location.hash = (item as HTMLLIElement).dataset.title!)
+    );
+  });
+
+  document.querySelectorAll(".actions-wrap").forEach((wrap) => {
+    wrap.addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      (event.target as HTMLElement)
+        .closest(".actions-wrap .view")
+        ?.querySelector("button")
+        ?.click();
+    });
+  });
+</script>
+
+<Layout title="Rex Components">
+  <nav class="open">
+    <div class="gfx">
+      <div class="open">&lt;&lt;</div>
+      <div class="text">menu</div>
+    </div>
+    <ul>
+      {
+        components.map((component: any) => (
+          <li data-menu-item data-title={component.title}>
+            <rex-translate>{component.title}</rex-translate>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <main>
+    <Settings />
+    {
+      components.map((comp: any) => (
+        <section
+          id={comp.title.replaceAll(" ", "") + "-wrap"}
+          class="component-wrap"
+          data-title={comp.title}
+        >
+          {comp.title.toLowerCase() !== "home" && (
+            <div class="actions-wrap">
+              <div class="view">
+                <span>see the code</span>
+                <div class="icon">
+                  <ViewButton
+                    id={"viewBtn" + comp.title.replaceAll(" ", "")}
+                    path={"/lib/" + comp.jsFile}
+                  />
+                </div>
+              </div>
+              <div class="download">
+                <a
+                  href={"./lib/" + comp.jsFile}
+                  download={comp.jsFile}
+                  class="btn-download"
+                >
+                  <span>download it</span>
+                  <div class="icon">
+                    <svg
+                      version="1.1"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="1.3rem"
+                      height="1.3rem"
+                      viewBox="0 0 32 32"
+                    >
+                      <path d="M23 14l-8 8-8-8h5v-12h6v12zM15 22h-15v8h30v-8h-15zM28 26h-4v-2h4v2z" />
+                    </svg>
+                  </div>
+                </a>
+              </div>
+            </div>
+          )}
+          {<comp.default />}
+        </section>
+      ))
+    }
+  </main>
+  <Dialog id="codeViewer"> <pre><span /></pre></Dialog>
+</Layout>
+
+<style is:global>
+  .hljs {
+    padding-top: 0;
+    background-color: black;
+    font-size: 0.8rem;
+  }
+
+  .component-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    padding: 0 1rem;
+    content-visibility: hidden;
+    > :last-child {
+      margin-bottom: 2rem;
+    }
+
+    &[data-selected="true"] {
+      content-visibility: visible;
+      animation: slidein 0.6s forwards;
+    }
+  }
+
+  .output {
+    border: 1px dashed var(--accent);
+    padding: 0.3rem 1rem;
+    border-radius: var(--borderRadius);
+    min-height: 1.6rem;
+    word-break: break-word;
+  }
+
+  .actions-wrap {
+    cursor: pointer;
+    position: static;
+    top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: baseline;
+    margin-top: -2rem;
+    background-color: var(--section1);
+    border-radius: var(--borderRadius);
+    font-size: 0.8rem;
+    font-weight: bold;
+    div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      height: 100%;
+      &.icon {
+        background-color: var(--detailsBG);
+        padding: 0 0.5rem;
+      }
+      span {
+        display: block;
+        padding-left: 0.5rem;
+        &:hover {
+          color: var(--accent);
+        }
+      }
+    }
+    .download .icon {
+      border-top-right-radius: var(--borderRadius);
+      border-bottom-right-radius: var(--borderRadius);
+    }
+    svg {
+      fill: var(--accent);
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  @keyframes slidein {
+    0% {
+      /* transform: translateX(100%); */
+      opacity: 0;
+    }
+    /* 70% {
+      transform: translateX(30%);
+      opacity: 0.5;
+    } */
+
+    100% {
+      opacity: 1;
+      /* transform: translateX(0%); */
+    }
+  }
+</style>

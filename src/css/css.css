@@ -1,0 +1,38 @@
+/* this is the css file css.css in src/css/css.css which is full of css */
+
+:root {
+  color-scheme: light dark;
+  /* default light theme */
+  --rex-font:  "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Osaka,
+    "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+
+  --accent: light-dark(#09c, #0099cc);
+  --accent2: light-dark(deeppink, deeppink);
+  --primary: light-dark(rgb(82, 33, 41), #09c);
+  --mainText: light-dark(rgb(82, 33, 41), rgb(239, 239, 239));
+  --mainBG: light-dark(white, black);
+  --contentBG: light-dark(#eeeeee, #2a2a2a);
+  --navBG: light-dark(#dddddd, #222222);
+  --insertBG: light-dark(#dfdfdf,#2c2c2c);
+  --heading: light-dark(#333, #eee);
+  --labelText: #4d4d4d;
+  --codeBG: #4d4d4d;
+  --inputText: light-dark(#000,#fff);
+  --inputBorder: #4d4d4d;
+  --input-border-hover: #333333;
+  --error: #df0101;
+  --borderRadius: 0.5rem;
+  --accentLight: #c7e6ff;
+  --section1: light-dark(#f5f5f5,#3d3c3c);
+--detailsBG:#292929;
+--highlightHeading:light-dark(rgb(70, 70, 70),deepskyblue);
+--detailsHeading:light-dark(rgb(224, 224, 224),rgb(224, 224, 224));
+--detailsText:#d7d7d7d7;
+--detailsLink:light-dark(#e61484,#ff67b9) ;
+--alert:light-dark(#ff9d2e,#ff9d2e) ;
+--dropDownBG:light-dark(#d7d7d7,#444) ;
+--menuHover:#FFE8E8;
+
+
+  overflow: hidden;
+}

@@ -1,0 +1,54 @@
+---
+export const title = "Theme Selector";
+export const jsFile = "themeSelector.js";
+---
+
+<h1>{title}</h1>
+
+<div class="desc">
+  This component is configured to detect the users current light/dark mode
+  preferance and set its default state to match. It then allows users to change
+  their theme with their choice saved to localStorage memory. Behind the scenes
+  it simply toggles the "color-scheme" css value on :root to be either light or
+  dark from its detault of "light dark".
+  <br /><br />
+</div>
+
+<div class="demo-wrap">
+  <rex-theme></rex-theme>
+</div>
+<h3>In Code</h3>
+<div class="code-wrap">
+  <pre><code class="usage language-javascript">
+    {`
+  // import the component
+  import {rex-theme} from TBA;
+  
+  //use it in your HTML
+  <rex-theme></rex-theme>
+  `}
+  </code></pre>
+  <h3>In CSS</h3>
+  <pre><code class="usage language-css css">
+    {`
+    /* make sure the color-scheme is set globally */
+    :root {
+        color-scheme: light dark;
+    }
+
+    /* define the variables */
+    --accent: light-dark(#000, #fff);
+
+    /* use the variables */
+    h1{color:var(--accent)}
+  `}
+  </code></pre>
+  <br />
+  <section class="highlight">
+    <h3>How it works</h3>
+  </section>
+
+  <script>
+    import "../lib/themeSelector";
+  </script>
+</div>
