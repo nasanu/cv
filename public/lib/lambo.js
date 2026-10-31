@@ -518,11 +518,7 @@ class RexLambo extends HTMLElement {
       sound.setAttribute("aria-checked", this.musicOn);
       if (!keepMusic) {
         // the switch itself: back to the silent INSERT COIN screen, with the car stopped
-        this.audio?.pause();
-        this.stopAttract();
-        this.speedNow = 0;
-        this.boost = 1;
-        this.setRate(0);
+        this.audio?.pause(); // the car eases to a stop in attractTick
       }
       this.announce("Vibe mode off.");
     }
@@ -890,8 +886,22 @@ class RexLambo extends HTMLElement {
     const dt = Math.max(0, Math.min((now - this.last) / 1000, 0.05));
     this.last = now;
     if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
-    this.speedNow = Math.min(RexLambo.attractSpeed, this.speedNow + dt * 0.5); // eases up to its cruising speed
-    this.boost += (2 - this.boost) * Math.min(1, dt * 4); // vibe mode cruises at TURBO speed, which a press then eases back from
+    if (this.vibe) {
+      this.speedNow = Math.min(RexLambo.attractSpeed, this.speedNow + dt * 0.5); // eases up to its cruising speed
+      this.boost += (2 - this.boost) * Math.min(1, dt * 4); // vibe mode cruises at TURBO speed, which a press then eases back from
+    } else {
+      // vibe mode has been switched off: ease down to a stop
+      this.speedNow *= Math.exp(-dt * 2.5);
+      this.boost += (1 - this.boost) * Math.min(1, dt * 4);
+      if (this.speedNow < 0.01) {
+        this.stopAttract();
+        this.speedNow = 0;
+        this.boost = 1;
+        this.setRate(0);
+        this.drawCity();
+        return;
+      }
+    }
     const blocks = (this.speedNow * dt) / (this.speedValue * RexLambo.roadPerSpin);
     this.cityBlocks = (this.cityBlocks + blocks * this.boost) % RexLambo.cityPeriod;
     this.cityBlocksEq = (this.cityBlocksEq + blocks) % RexLambo.cityPeriod; // the equaliser ignores TURBO, as when driving
@@ -1486,8 +1496,11 @@ class RexLambo extends HTMLElement {
       const ws = cs - 2;
       const T = h + RexLambo.eqBelow;
       const cols = Math.max(1, Math.floor(span / cs));
+      // the lights are spread across the face with the same gap between them as at both edges (not packed from one edge, which
+      // left the leftover width as a wider gap at the other)
+      const gap = Math.max(0, (span - cols * ws) / (cols + 1));
       const quad = (col, zt) => {
-        const a = start + col * cs;
+        const a = start + gap + col * (ws + gap);
         if (alongX) {
           proj(a, fixed, zt, P0);
           proj(a + ws, fixed, zt, P1);
