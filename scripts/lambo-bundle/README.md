@@ -44,6 +44,8 @@ height 28rem). `--borderRadius` sets the corner radius.
 - VIBE MODE (top right, always shown): a neon switch. Switching it on, from any screen, sends the car back to the INSERT COIN screen
   and turns the music and the skyline equaliser on, with no text panels. Any press, key or swipe then switches it off and carries on as
   normal (driving to the first billboard). Switching it off with the switch itself stops the music.
+- Volume: hover over the sound switch (or tab to it, or tap it on a touch screen) for a slider under it. It starts at 30%;
+  turning it up while the music is switched off switches it on.
 - Escape, or the back button (on a phone, or the browser's), goes from start mode back to the INSERT COIN screen. (Setting off from
   that screen adds a step to the page's history for the back button to undo.)
 - Keyboard: the component can be tabbed to. Enter, Space or the left arrow drives to the next billboard (like a swipe right) and the right arrow goes back

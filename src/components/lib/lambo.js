@@ -21,11 +21,10 @@ class RexLambo extends HTMLElement {
   // How loud, as a share of full loudness. The browser's audio.volume is a plain amplitude scale, which sounds much louder
   // than its number (0.3 is only about 10 dB down, and these tracks are mastered loud), so it is turned into amplitude the
   // way hearing works: twice as loud is 10 dB more, so 30% loudness is about 17 dB down (amplitude 0.135) and 60% about
-  // 7 dB down (amplitude 0.43).
+  // 7 dB down (amplitude 0.43). This is where the volume slider starts (see setVolume).
   static musicDelay = 1; // seconds of quiet before a track starts
   static musicFadeIn = 1; // seconds the music takes to rise from quiet to full volume when it starts
-  static musicVolume = 0.6;
-  static musicAmplitude = 10 ** ((10 * Math.log2(RexLambo.musicVolume)) / 20);
+  static musicVolume = 0.3;
   static defaultSpeed = 0.2; // seconds per wheel revolution
   static beatStretch = 0.11; // how much longer (and lower) the car is on a full beat in vibe mode, as a share of its size
   static attractSpeed = 1; // how fast the car cruises in vibe mode, as a share of full speed (and then doubled, like TURBO)
@@ -71,6 +70,7 @@ class RexLambo extends HTMLElement {
     this.audioCtx = null;
     this.analyser = null;
     this.musicOn = true; // the sound switch
+    this.volume = RexLambo.musicVolume; // the volume slider, as a share of full loudness
     this.turbo = false; // the TURBO switch: double speed while on
     this.vibe = false; // the VIBE MODE switch: the music and the equaliser on, and no text panels (see setVibe)
     this.vibeBefore = null; // what the music was doing before vibe mode, to put back when it is switched off
@@ -121,6 +121,25 @@ class RexLambo extends HTMLElement {
       else if (this.audio) this.playMusic();
       else this.startMusic();
       if (!this.driving) this.drawCity(); // show or hide the random lights at once
+    });
+    // the volume slider, under the sound switch: shown while the pointer is over the switch or the slider (or either has
+    // the focus), and on a touch screen for a few seconds after the switch is tapped or the slider is used
+    const vol = stage.querySelector(".vol");
+    const range = vol.querySelector("input");
+    vol.addEventListener("pointerdown", (e) => e.stopPropagation());
+    const showSlider = () => {
+      vol.classList.add("open");
+      clearTimeout(this.volTimer);
+      this.volTimer = setTimeout(() => vol.classList.remove("open"), 3000);
+    };
+    sound.addEventListener("pointerup", (e) => {
+      if (e.pointerType !== "mouse") showSlider();
+    });
+    range.addEventListener("input", () => {
+      range.style.setProperty("--v", `${range.value}%`);
+      this.setVolume(range.value / 100);
+      if (range.value > 0 && !this.musicOn) sound.click(); // turning it up turns the music on
+      if (vol.classList.contains("open")) showSlider();
     });
     this.updateTrack();
     const panel = stage.querySelector(".table");
@@ -342,7 +361,7 @@ class RexLambo extends HTMLElement {
 
   /** Turns the music right down at once, ready for fadeInMusic. */
   quietMusic() {
-    const amp = RexLambo.musicAmplitude;
+    const amp = this.musicAmp();
     const g = this.musicGain;
     cancelAnimationFrame(this.fadeFrame);
     this.fadeFrame = 0;
@@ -352,6 +371,34 @@ class RexLambo extends HTMLElement {
       g.gain.setValueAtTime(amp * 0.01, t);
     } else if (this.audio) this.audio.volume = amp * 0.01;
     this.setLoudness(0.01, 0.01, 0);
+  }
+
+  /** The slider's volume as the amplitude to play at: loudness the way hearing works (see musicVolume), never quite 0. */
+  musicAmp() {
+    return this.volume > 0 ? Math.min(1, 10 ** ((10 * Math.log2(this.volume)) / 20)) : 1e-4;
+  }
+
+  /**
+   * The volume slider: sets the volume (a share of full loudness, 0 to 1) at once, without upsetting a fade in that is
+   * under way (it then just ends at the new volume). While the music is quiet or stopping, the next fade in uses it.
+   */
+  setVolume(v) {
+    this.volume = v;
+    const amp = this.musicAmp();
+    const l = this.loudness;
+    const g = this.musicGain;
+    if (g) {
+      const t = g.context.currentTime;
+      const k = l && l.secs > 0 ? (t - l.t0) / l.secs : 1;
+      if (!l || (l.to === 1 && k >= 1)) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setTargetAtTime(amp, t, 0.03); // (a few hundredths of a second, so a drag doesn't crackle)
+      } else if (l.to === 1) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(amp * 0.01 ** (1 - k), t);
+        g.gain.exponentialRampToValueAtTime(amp, l.t0 + l.secs);
+      }
+    } else if (this.audio && !this.fadeFrame && (!l || l.to === 1)) this.audio.volume = amp;
   }
 
   /** The clock the volume changes run on: the audio's own with Web Audio (it only runs while the sound does), else the page's. */
@@ -371,7 +418,7 @@ class RexLambo extends HTMLElement {
    */
   audible() {
     const a = this.audio;
-    if (!a || a.paused || a.muted) return 0;
+    if (!a || a.paused || a.muted || this.volume <= 0) return 0;
     const l = this.loudness;
     if (!l) return 1;
     const k = l.secs > 0 ? Math.min(1, Math.max(0, (this.musicClock() - l.t0) / l.secs)) : 1;
@@ -385,7 +432,7 @@ class RexLambo extends HTMLElement {
    * equaliser doesn't fade in too); without it, the player's own volume.
    */
   fadeInMusic() {
-    const amp = RexLambo.musicAmplitude;
+    const amp = this.musicAmp();
     const secs = RexLambo.musicFadeIn;
     const g = this.musicGain;
     if (g) {
@@ -401,7 +448,7 @@ class RexLambo extends HTMLElement {
     const t0 = performance.now();
     const step = (now) => {
       const k = Math.min(1, Math.max(0, (now - t0) / (secs * 1000)));
-      a.volume = amp * 0.01 ** (1 - k);
+      a.volume = this.musicAmp() * 0.01 ** (1 - k);
       this.fadeFrame = k < 1 ? requestAnimationFrame(step) : 0;
     };
     a.volume = amp * 0.01;
@@ -425,7 +472,7 @@ class RexLambo extends HTMLElement {
     g.gain.cancelScheduledValues(t);
     g.gain.setValueAtTime(g.gain.value, t);
     g.gain.linearRampToValueAtTime(0, t + 0.06);
-    this.setLoudness(Math.max(g.gain.value / RexLambo.musicAmplitude, 1e-4), 1e-4, 0.06, true);
+    this.setLoudness(Math.max(g.gain.value / this.musicAmp(), 1e-4), 1e-4, 0.06, true);
     clearTimeout(this.pauseTimer);
     this.pauseTimer = setTimeout(() => {
       this.pauseTimer = 0;
@@ -855,7 +902,7 @@ class RexLambo extends HTMLElement {
       analyser.minDecibels = -88;
       analyser.maxDecibels = -28;
       const gain = ctx.createGain();
-      gain.gain.value = RexLambo.musicAmplitude;
+      gain.gain.value = this.musicAmp();
       audio.volume = 1;
       source.connect(analyser);
       source.connect(gain).connect(ctx.destination);
@@ -994,7 +1041,7 @@ class RexLambo extends HTMLElement {
   }
 
   /**
-   * Starts the soundtrack (once). The tracks in `RexLambo.music` play in a random order, at `musicAmplitude`. Every
+   * Starts the soundtrack (once). The tracks in `RexLambo.music` play in a random order, at the slider's volume (see musicAmp). Every
    * track is played once before any is repeated (a shuffle, reshuffled when the list runs out), and the first track of
    * a new shuffle is never the one that has just played.
    */
@@ -1016,7 +1063,7 @@ class RexLambo extends HTMLElement {
       return last;
     };
     const audio = new Audio(next());
-    audio.volume = RexLambo.musicAmplitude;
+    audio.volume = this.musicAmp();
     audio.addEventListener("ended", () => {
       audio.src = next();
       this.playMusic(); // after the same short wait as the first
@@ -3094,6 +3141,39 @@ class RexLambo extends HTMLElement {
         }
         .turbo:focus-visible, .sound:focus-visible, .vibe:focus-visible { outline: 0.15em solid #fff3a8; outline-offset: 0.45em; }
         .sound { padding: 0.6em 0.8em; }
+        /* the volume slider: drops down under the sound switch (the gap above it is part of it, so the pointer can get there) */
+        .vol { position: relative; display: flex; }
+        .vol .slider {
+          position: absolute;
+          left: 50%;
+          top: 100%;
+          padding-top: 0.9em;
+          transform: translateX(-50%);
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s, visibility 0s 0.2s;
+        }
+        .vol:hover .slider, .vol:focus-within .slider, .vol.open .slider { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+        .slider input {
+          -webkit-appearance: none;
+          appearance: none;
+          display: block;
+          box-sizing: border-box;
+          width: 10em;
+          height: 2.6em;
+          margin: 0;
+          padding: 0 1em;
+          background: rgba(8, 2, 30, 0.85);
+          box-shadow: 0 -0.2em 0 0 #09c, 0 0.2em 0 0 #09c, -0.2em 0 0 0 #09c, 0.2em 0 0 0 #09c, 0 0 1.2em rgba(0, 153, 204, 0.45);
+          cursor: pointer;
+          touch-action: none;
+        }
+        .slider input:focus-visible { outline: 0.15em solid #fff3a8; outline-offset: 0.45em; }
+        /* the track: lit magenta up to the thumb (--v), dark after it */
+        .slider input::-webkit-slider-runnable-track { height: 0.35em; background: linear-gradient(90deg, #ff2e93 0 var(--v), #2a2a40 var(--v)); box-shadow: 0 0 0.6em rgba(255, 46, 147, 0.5); }
+        .slider input::-moz-range-track { height: 0.35em; background: linear-gradient(90deg, #ff2e93 0 var(--v), #2a2a40 var(--v)); box-shadow: 0 0 0.6em rgba(255, 46, 147, 0.5); }
+        .slider input::-webkit-slider-thumb { -webkit-appearance: none; width: 0.9em; height: 1.4em; margin-top: -0.525em; border: 0; border-radius: 0; background: #7df3ff; box-shadow: 0 0 0.7em #00e5ff; }
+        .slider input::-moz-range-thumb { width: 0.9em; height: 1.4em; border: 0; border-radius: 0; background: #7df3ff; box-shadow: 0 0 0.7em #00e5ff; }
         .sound svg { display: block; width: 2.2em; height: 1.4em; fill: #8d93a0; stroke: #8d93a0; stroke-width: 2; stroke-linecap: round; transition: fill 0.2s, stroke 0.2s; }
         .sound .spk { stroke-linejoin: round; }
         .sound .wave, .sound .off { fill: none; }
@@ -3354,7 +3434,7 @@ class RexLambo extends HTMLElement {
         ${wheels}</div>
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
       <div class="how" aria-hidden="true"><span class="touch"><svg viewBox="0 0 24 24"><path class="tap" d="M6.6 4.5a3.9 3.9 0 0 1 7.8 0"/><path d="M9 12V4.6a1.5 1.5 0 0 1 3 0V10l4.6 1a2 2 0 0 1 1.6 2.2l-.7 5.3a2 2 0 0 1-2 1.7H11a2 2 0 0 1-1.6-.8L5.6 14.6a1.4 1.4 0 0 1 2-1.9L9 14"/></svg>touch to start</span><span class="desk"><svg viewBox="0 0 24 24"><path class="solid" d="M6 3l12.5 7.6-5.4 1.3 3.3 6-2.4 1.3-3.3-6L6.5 17z"/></svg>click or hit<svg class="key" viewBox="0 0 30 24"><rect x="1.5" y="3.5" width="27" height="17" rx="3"/><path d="M22 8v4.5H9"/><path d="M12 9.5l-3 3 3 3"/></svg>enter to start</span></div>
-      <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button></div>
+      <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><div class="vol"><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button><div class="slider"><input type="range" min="0" max="100" step="1" value="${Math.round(RexLambo.musicVolume * 100)}" aria-label="Volume" style="--v: ${Math.round(RexLambo.musicVolume * 100)}%" /></div></div></div>
       <div class="swipe prev" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div><div class="swipe next" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div>
       <div class="esc" aria-hidden="true">hit<svg viewBox="0 0 34 24"><rect x="1.5" y="3.5" width="31" height="17" rx="3"/><text x="17" y="15.6">ESC</text></svg>to return</div>
       <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
