@@ -27,11 +27,14 @@ class RexLambo extends HTMLElement {
   static defaultSpeed = 0.2; // seconds per wheel revolution
   static attractSpeed = 0.7; // how fast the car cruises on the INSERT COIN screen, as a share of full speed
   static label = "Interactive scene of a Lamborghini Countach. Press Enter, Space or the left arrow to drive to the next billboard, and the right arrow to go back.";
-  // The barrier is built from this many pieces end to end, each 12 road blocks long (see .barrier). 12 blocks is 19 of the
-  // barrier's own 48cqw patterns, so the pieces join up seamlessly. As one 44 block strip it was wider than the largest
+  // The barrier is built from this many pieces end to end, each barrierBlocks road blocks long (see .barrier), shifted by --off so
+  // that the barrier's own 48cqw patterns join up seamlessly. As one 44 block strip it was wider than the largest
   // texture a GPU will draw (16384px) on a big window (about 1800px wide and up), and then the barrier vanished.
-  static barrierPieces = 4;
-  static motionCount = 3 + 3 * RexLambo.barrierPieces; // CSS animations that are slowed with the car: two wheels, the road, and a barrier, its lid and rail for each piece
+  static barrierPieces = 16;
+  static barrierBlocks = 3; // so each piece is 3 blocks long: that is under 16384px up to a window about 7000px wide (a 4K screen is 3840)
+  static roadTiles = 20; // the road is this many tiles of 3 blocks end to end (60 blocks), for the same reason
+  static roadTileBlocks = 3;
+  static motionCount = 2 + RexLambo.roadTiles + 3 * RexLambo.barrierPieces; // CSS animations that are slowed with the car: two wheels, a road tile each, and a barrier, its lid and rail for each piece
   static roadPerSpin = 2.3; // one block of road is roughly 2.3 wheel turns long, so the road keeps pace with the wheels
 
   /** Seconds per wheel revolution, from the speed attribute. */
@@ -1938,9 +1941,16 @@ class RexLambo extends HTMLElement {
           `<button type="button" class="stop" style="--at:${(i + 1) / (RexLambo.tables.length + 1)}" aria-label="Drive to ${RexLambo.esc(t.title)}"><b></b></button>`,
       )
       .join("");
+    // a piece starts barrierBlocks blocks after the one before; a block is 76cqw and the patterns repeat every 48cqw, so the
+    // pieces are given the shift (--off) that makes their patterns join up
     const barrier = Array.from(
       { length: RexLambo.barrierPieces },
-      (_, i) => `<div class="barrier" style="--i:${i}"><div class="lid"></div><div class="rail"></div></div>`,
+      (_, i) =>
+        `<div class="barrier" style="--i:${i};--off:${-((RexLambo.barrierBlocks * i * 76) % 48)}cqw"><div class="lid"></div><div class="rail"></div></div>`,
+    ).join("");
+    const roadTiles = Array.from(
+      { length: RexLambo.roadTiles },
+      (_, i) => `<div class="plane" style="--j:${i}"></div>`,
     ).join("");
     const spokes = ring("b", 0);
     const bolts = ring("i", 36);
@@ -2216,13 +2226,23 @@ class RexLambo extends HTMLElement {
           pointer-events: none;
         }
         /* the road is one block wide; each block is --w long, so every section is one big square */
-        .plane {
+        .ground {
           position: absolute;
           left: 52%;
           top: 62%;
           width: calc(var(--w) + var(--wx));
           height: calc(var(--w) * 60);
           transform: translate(-50%, -50%) rotateX(70deg) rotateZ(42deg) translateX(calc(var(--wx) / 2));
+          transform-style: preserve-3d;
+        }
+        /* the ground is cut into tiles, since one layer taller than the GPU's largest texture (16384px) is not drawn at all */
+        .plane {
+          position: absolute;
+          left: 0;
+          width: 100%;
+          top: calc(var(--w) * ${RexLambo.roadTileBlocks} * var(--j));
+          height: calc(var(--w) * ${RexLambo.roadTileBlocks} + 0.3cqw); /* a hair longer than the tile, with the same pattern, so no seam shows */
+          transform: translateZ(0);
           box-sizing: border-box;
           background-color: #2b2b2b;
           background-image: linear-gradient(#09c 0 0.5cqw, transparent 0.5cqw);
@@ -2664,17 +2684,17 @@ class RexLambo extends HTMLElement {
           position: absolute;
           left: 0;
           top: 0;
-          width: calc(var(--w) * 12); /* one piece of the barrier (see RexLambo.barrierPieces); piece --i starts 12 blocks after the one before */
+          width: calc(var(--w) * ${RexLambo.barrierBlocks}); /* one piece of the barrier (see RexLambo.barrierPieces); piece --i starts barrierBlocks blocks after the one before */
           height: 22cqw;
           transform-origin: 0 100%;
-          transform: translate3d(-0.4cqw, calc(var(--w) * (8 + 12 * var(--i, 0))), 0) rotateZ(90deg) rotateX(-90deg);
+          transform: translate3d(-0.4cqw, calc(var(--w) * (8 + ${RexLambo.barrierBlocks} * var(--i, 0))), 0) rotateZ(90deg) rotateX(-90deg);
           transform-style: preserve-3d;
           background:
             /* amber reflector lamps with a soft halo */
-            radial-gradient(ellipse 2.4cqw 1.3cqw at 18% 30%, #fff3d0 0 20%, #ffb347 38%, rgba(255, 120, 20, 0.35) 62%, transparent 100%) 0 0 / var(--seg) 100%,
-            radial-gradient(ellipse 2.4cqw 1.3cqw at 68% 30%, #e9ffff 0 20%, #5ff0ff 38%, rgba(0, 200, 255, 0.35) 62%, transparent 100%) 0 0 / var(--seg) 100%,
+            radial-gradient(ellipse 2.4cqw 1.3cqw at 18% 30%, #fff3d0 0 20%, #ffb347 38%, rgba(255, 120, 20, 0.35) 62%, transparent 100%) var(--off, 0cqw) 0 / var(--seg) 100%,
+            radial-gradient(ellipse 2.4cqw 1.3cqw at 68% 30%, #e9ffff 0 20%, #5ff0ff 38%, rgba(0, 200, 255, 0.35) 62%, transparent 100%) var(--off, 0cqw) 0 / var(--seg) 100%,
             /* neon panel joint with a glow either side */
-            linear-gradient(90deg, rgba(255, 46, 147, 0.5) 0 0.2cqw, #ff7ac0 0.2cqw 0.5cqw, rgba(255, 46, 147, 0.5) 0.5cqw 0.8cqw, transparent 1.6cqw) 0 0 / var(--seg) 100%,
+            linear-gradient(90deg, rgba(255, 46, 147, 0.5) 0 0.2cqw, #ff7ac0 0.2cqw 0.5cqw, rgba(255, 46, 147, 0.5) 0.5cqw 0.8cqw, transparent 1.6cqw) var(--off, 0cqw) 0 / var(--seg) 100%,
             /* glowing cyan band across the middle */
             linear-gradient(to bottom, transparent 0 52%, rgba(0, 229, 255, 0.25) 52% 56%, #7df3ff 56% 59%, rgba(0, 229, 255, 0.25) 59% 63%, transparent 63%),
             /* the wall: magenta glow at the top fading to deep indigo, cyan trim along the bottom */
@@ -2694,7 +2714,7 @@ class RexLambo extends HTMLElement {
           transform-origin: 0 0;
           transform: rotateX(-90deg);
           background:
-            linear-gradient(90deg, rgba(20, 0, 40, 0.55) 0 0.4cqw, transparent 1cqw) 0 0 / var(--seg) 100%,
+            linear-gradient(90deg, rgba(20, 0, 40, 0.55) 0 0.4cqw, transparent 1cqw) var(--off, 0cqw) 0 / var(--seg) 100%,
             linear-gradient(to bottom, #ff9bd0, #ff2e93 60%, #c2207a);
         }
         .rail {
@@ -2705,9 +2725,9 @@ class RexLambo extends HTMLElement {
             linear-gradient(to bottom, transparent 0 60%, rgba(255, 46, 147, 0.4) 60% 65%, #ff2e93 65% 68%, #ffc2e2 68% 70%, #ff2e93 70% 73%, rgba(255, 46, 147, 0.4) 73% 78%, transparent 78%),
             linear-gradient(to bottom, transparent 0 12%, rgba(0, 200, 255, 0.4) 12% 17%, #00c8ff 17% 20%, #e0ffff 20% 22%, #00c8ff 22% 25%, rgba(0, 200, 255, 0.4) 25% 30%, transparent 30%),
             /* two posts per segment, indigo with neon edges */
-            linear-gradient(90deg, #ff2e93 0 0.25cqw, #1c0a3f 0.25cqw 1.75cqw, #09c 1.75cqw 2cqw, transparent 2cqw 50%, #ff2e93 50% calc(50% + 0.25cqw), #1c0a3f calc(50% + 0.25cqw) calc(50% + 1.75cqw), #09c calc(50% + 1.75cqw) calc(50% + 2cqw), transparent calc(50% + 2cqw)) 0 0 / var(--seg) 100%;
+            linear-gradient(90deg, #ff2e93 0 0.25cqw, #1c0a3f 0.25cqw 1.75cqw, #09c 1.75cqw 2cqw, transparent 2cqw 50%, #ff2e93 50% calc(50% + 0.25cqw), #1c0a3f calc(50% + 0.25cqw) calc(50% + 1.75cqw), #09c calc(50% + 1.75cqw) calc(50% + 2cqw), transparent calc(50% + 2cqw)) var(--off, 0cqw) 0 / var(--seg) 100%;
         }
-        @keyframes slide { to { background-position-x: calc(var(--seg) * -1); } }
+        @keyframes slide { to { background-position-x: calc(var(--off, 0cqw) - var(--seg)); } }
         .skyline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
         /*
          * a roadside billboard, about 80cqw wide: the sign face (a painted canvas under a bezel, scanlines and a faint
@@ -2792,7 +2812,7 @@ class RexLambo extends HTMLElement {
         @media (prefers-reduced-motion: reduce) { .spin, .plane, .barrier, .lid, .rail { animation-play-state: paused; } }
       </style>
       <div class="stage intro"><div class="sky" aria-hidden="true"><canvas class="stars"></canvas></div><div class="moon" aria-hidden="true"></div><canvas class="skyline" aria-hidden="true"></canvas><div class="status sr" role="status" aria-live="polite"></div><div class="view"><div class="scene" aria-hidden="true">
-        <div class="road"><div class="plane"></div><div class="world">${barrier}</div></div>
+        <div class="road"><div class="ground">${roadTiles}</div><div class="world">${barrier}</div></div>
         <div class="ao"><i class="long"></i><i class="body"></i><i class="fw"></i><i class="rw"></i></div>
         <img src="${src}" alt="Lamborghini Countach" draggable="false" />
         ${wheels}
