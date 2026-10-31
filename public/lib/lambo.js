@@ -295,7 +295,18 @@ class RexLambo extends HTMLElement {
   playMusic() {
     const a = this.audio;
     if (!a || !this.musicOn || this.musicTimer) return; // (already waiting to start)
+    if (this.pauseTimer) {
+      // switched back on while it was still fading out to stop: just bring it back up
+      clearTimeout(this.pauseTimer);
+      this.pauseTimer = 0;
+      if (!a.paused) {
+        this.fadeInMusic();
+        return;
+      }
+    }
+    if (!a.paused) return; // already playing
     if (a.currentTime > 0) {
+      this.quietMusic(); // so it carries on from quiet (fadeInMusic, on "playing"), not with a burst at full volume first
       a.play().catch(() => {});
       return;
     }
@@ -305,8 +316,23 @@ class RexLambo extends HTMLElement {
     a.muted = false;
     this.musicTimer = setTimeout(() => {
       this.musicTimer = 0;
-      if (this.musicOn) a.play().catch(() => {}); // blocked or missing: the scene just stays quiet
+      if (!this.musicOn) return;
+      this.quietMusic();
+      a.play().catch(() => {}); // blocked or missing: the scene just stays quiet
     }, RexLambo.musicDelay * 1000);
+  }
+
+  /** Turns the music right down at once, ready for fadeInMusic. */
+  quietMusic() {
+    const amp = RexLambo.musicAmplitude;
+    const g = this.musicGain;
+    cancelAnimationFrame(this.fadeFrame);
+    this.fadeFrame = 0;
+    if (g) {
+      const t = g.context.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(amp * 0.01, t);
+    } else if (this.audio) this.audio.volume = amp * 0.01;
   }
 
   /**
@@ -341,7 +367,23 @@ class RexLambo extends HTMLElement {
   pauseMusic() {
     clearTimeout(this.musicTimer);
     this.musicTimer = 0;
-    this.audio?.pause();
+    const a = this.audio;
+    if (!a || a.paused) return;
+    const g = this.musicGain;
+    if (!g || g.context.state !== "running") {
+      a.pause();
+      return;
+    }
+    // a very short fade out first: cutting the sound off mid wave is heard as a click
+    const t = g.context.currentTime;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(0, t + 0.06);
+    clearTimeout(this.pauseTimer);
+    this.pauseTimer = setTimeout(() => {
+      this.pauseTimer = 0;
+      a.pause();
+    }, 80);
   }
 
   /* ---------- driving: park at a billboard, wait for a key or touch, drive to the next ---------- */
