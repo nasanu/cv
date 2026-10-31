@@ -118,4 +118,4 @@ class ThemeSelect extends HTMLElement {
     }
   }
 }
-customElements.define("rex-theme", ThemeSelect);
+customElements.define("fn-theme", ThemeSelect);

@@ -1,5 +1,5 @@
 /*
- * <rex-lambo> - a pixel art Lamborghini Countach with spinning wheels.
+ * <fn-lambo> - a pixel art Lamborghini Countach with spinning wheels.
  *
  * The car is an image (default ./lambo-transparent.png). The wheels are CSS/HTML discs laid over the
  * painted wheels, squashed and tilted to match the perspective, and spun with a CSS animation.
@@ -12,7 +12,7 @@
  *   (the car waits stopped on the INSERT COIN screen (it cruises there in vibe mode) until Enter, Space, the left arrow or a touch, then drives to a billboard, stops, and goes on at the next press;
  *   the right arrow or a swipe left goes back. It is focusable, and a live region announces each stop)
  */
-class RexLambo extends HTMLElement {
+class FnLambo extends HTMLElement {
   static observedAttributes = ["src", "speed", "paused"];
 
   static defaultSrc = "./lambo-transparent.png";
@@ -36,12 +36,12 @@ class RexLambo extends HTMLElement {
   static barrierBlocks = 3; // so each piece is 3 blocks long: that is under 16384px up to a window about 7000px wide (a 4K screen is 3840)
   static roadTiles = 20; // the road is this many tiles of 3 blocks end to end (60 blocks), for the same reason
   static roadTileBlocks = 3;
-  static motionCount = 2 + RexLambo.roadTiles + 3 * RexLambo.barrierPieces; // CSS animations that are slowed with the car: two wheels, a road tile each, and a barrier, its lid and rail for each piece
+  static motionCount = 2 + FnLambo.roadTiles + 3 * FnLambo.barrierPieces; // CSS animations that are slowed with the car: two wheels, a road tile each, and a barrier, its lid and rail for each piece
   static roadPerSpin = 2.3; // one block of road is roughly 2.3 wheel turns long, so the road keeps pace with the wheels
 
   /** Seconds per wheel revolution, from the speed attribute. */
   get speed() {
-    return parseFloat(this.getAttribute("speed")) || RexLambo.defaultSpeed;
+    return parseFloat(this.getAttribute("speed")) || FnLambo.defaultSpeed;
   }
 
   // wheel placement as % of the image (1408 x 768), plus perspective squash + tilt
@@ -60,7 +60,7 @@ class RexLambo extends HTMLElement {
     // it can be tabbed to, and says what it is and which keys drive it (see onKey); an author's own attributes win
     if (!this.hasAttribute("tabindex")) this.tabIndex = 0;
     if (!this.hasAttribute("role")) this.setAttribute("role", "group");
-    if (!this.hasAttribute("aria-label")) this.setAttribute("aria-label", RexLambo.label);
+    if (!this.hasAttribute("aria-label")) this.setAttribute("aria-label", FnLambo.label);
     this.driving = false; // false while parked (or not yet started), true from a key press until the car stops
     this.speedNow = 0; // 0 = parked, 1 = full speed
     this.boards = [];
@@ -70,7 +70,7 @@ class RexLambo extends HTMLElement {
     this.audioCtx = null;
     this.analyser = null;
     this.musicOn = true; // the sound switch
-    this.volume = RexLambo.musicVolume; // the volume slider, as a share of full loudness
+    this.volume = FnLambo.musicVolume; // the volume slider, as a share of full loudness
     this.turbo = false; // the TURBO switch: double speed while on
     this.vibe = false; // the VIBE MODE switch: the music and the equaliser on, and no text panels (see setVibe)
     this.vibeBefore = null; // what the music was doing before vibe mode, to put back when it is switched off
@@ -81,7 +81,7 @@ class RexLambo extends HTMLElement {
     this.frame = 0;
     this.rate = 0; // the playbackRate the CSS animations are at
     this.onScreen = true;
-    this.avatarSrc = this.getAttribute("avatar") || RexLambo.avatarSrc; // per component, so two can have different photos
+    this.avatarSrc = this.getAttribute("avatar") || FnLambo.avatarSrc; // per component, so two can have different photos
 
     // the wheels and the road are CSS animations; their playbackRate is how fast the car is going
     const stage = this.shadowRoot.querySelector(".stage");
@@ -285,7 +285,7 @@ class RexLambo extends HTMLElement {
     if (name === "src") {
       // (an element that was already on the page when the script loaded gets this before it has drawn itself)
       const img = this.shadowRoot.querySelector("img");
-      if (img) img.src = newValue || RexLambo.defaultSrc;
+      if (img) img.src = newValue || FnLambo.defaultSrc;
     } else {
       this.applyState();
       if (name === "paused" && newValue === null) this.startAttract(); // (a no-op unless it is still the INSERT COIN screen)
@@ -313,8 +313,8 @@ class RexLambo extends HTMLElement {
 
   /** Brings what is on screen up to date after the component has been scrolled out of view and back. */
   syncView() {
-    if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
-    for (const b of this.boards) RexLambo.place(b.el, b.p);
+    if (this.motion.length < FnLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
+    for (const b of this.boards) FnLambo.place(b.el, b.p);
     this.drawCity();
     this.updateTrack();
   }
@@ -356,7 +356,7 @@ class RexLambo extends HTMLElement {
       if (!this.musicOn) return;
       this.quietMusic();
       a.play().catch(() => {}); // blocked or missing: the scene just stays quiet
-    }, RexLambo.musicDelay * 1000);
+    }, FnLambo.musicDelay * 1000);
   }
 
   /** Turns the music right down at once, ready for fadeInMusic. */
@@ -433,7 +433,7 @@ class RexLambo extends HTMLElement {
    */
   fadeInMusic() {
     const amp = this.musicAmp();
-    const secs = RexLambo.musicFadeIn;
+    const secs = FnLambo.musicFadeIn;
     const g = this.musicGain;
     if (g) {
       const t = g.context.currentTime;
@@ -487,7 +487,7 @@ class RexLambo extends HTMLElement {
     const hint = stage.querySelector(".hint");
     // the first screen is drawn in the billboards' pixel font, like an arcade attract screen; every other hint is plain text
     if (text && stage.classList.contains("intro"))
-      hint.replaceChildren(RexLambo.pixelText(text));
+      hint.replaceChildren(FnLambo.pixelText(text));
     else hint.textContent = text;
     stage.classList.toggle("prompt", !!text);
     // the hint is a picture of text, so say it (and what to do) in the live region too
@@ -604,7 +604,7 @@ class RexLambo extends HTMLElement {
    */
   static mediaHTML(media) {
     if (!media?.length) return "";
-    const esc = RexLambo.esc;
+    const esc = FnLambo.esc;
     const items = media
       .map((m) => {
         const file = esc(m.file);
@@ -669,7 +669,7 @@ class RexLambo extends HTMLElement {
    */
   static linksHTML(links) {
     if (!links?.length) return "";
-    const esc = RexLambo.esc;
+    const esc = FnLambo.esc;
     return (
       `<div class="links">` +
       links
@@ -785,22 +785,22 @@ class RexLambo extends HTMLElement {
 
   /** Fills the table with the content for billboard `idx` and fades it in. */
   showTable(idx) {
-    const data = RexLambo.tables[idx % RexLambo.tables.length];
+    const data = FnLambo.tables[idx % FnLambo.tables.length];
     const table = this.shadowRoot.querySelector(".table");
     const medals = ["1ST", "2ND", "3RD"];
     table.innerHTML =
-      `<h2>\u2605 ${RexLambo.esc(data.title)} \u2605</h2>` +
+      `<h2>\u2605 ${FnLambo.esc(data.title)} \u2605</h2>` +
       `<div class="sub">HIGH SCORES</div>` +
-      `<ol>${data.scores.map(([n, s], i) => `<li><span>${medals[i]}</span><span>${RexLambo.esc(n)}</span><span>${RexLambo.esc(s)}</span></li>`).join("")}</ol>` +
+      `<ol>${data.scores.map(([n, s], i) => `<li><span>${medals[i]}</span><span>${FnLambo.esc(n)}</span><span>${FnLambo.esc(s)}</span></li>`).join("")}</ol>` +
       data.text.map((t) => `<p>${t}</p>`).join("") +
-      RexLambo.mediaHTML(data.media) +
-      RexLambo.linksHTML(data.links);
+      FnLambo.mediaHTML(data.media) +
+      FnLambo.linksHTML(data.links);
     table.inert = false;
     // its mini billboard on the strip lights up, and stays lit, once its panel has been shown (not just driven past)
-    this.trackEls?.stops[idx % RexLambo.tables.length]?.classList.add("lit");
+    this.trackEls?.stops[idx % FnLambo.tables.length]?.classList.add("lit");
     table.setAttribute("aria-label", data.title); // the panel is a region the keyboard can reach (and scroll)
     this.shadowRoot.querySelectorAll(".stop").forEach((el, i) => {
-      if (i === idx % RexLambo.tables.length) el.setAttribute("aria-current", "step");
+      if (i === idx % FnLambo.tables.length) el.setAttribute("aria-current", "step");
       else el.removeAttribute("aria-current");
     });
     this.announce(`Stopped at ${data.title}. Tab to read the details, or press Enter to drive on.`);
@@ -824,7 +824,7 @@ class RexLambo extends HTMLElement {
    * it goes before the car stops). A drive that goes on over the finish line carries on from START (s wraps round).
    */
   updateTrack() {
-    const n = RexLambo.tables.length;
+    const n = FnLambo.tables.length;
     if (!this.trackEls || !n) return;
     const round = n + 1;
     const target = this.boards[this.boards.length - 1];
@@ -833,7 +833,7 @@ class RexLambo extends HTMLElement {
     if (j && target) {
       const f = Math.min(
         1,
-        Math.max(0, (target.p - j.p0) / (RexLambo.stopAt - j.p0)),
+        Math.max(0, (target.p - j.p0) / (FnLambo.stopAt - j.p0)),
       );
       s = j.s0 + f * j.ds;
     }
@@ -857,14 +857,14 @@ class RexLambo extends HTMLElement {
   /** Called on a drive key (see onKey) or a touch. Only does anything while the car is parked: drives on to the next billboard. */
   go() {
     if (this.vibe) this.setVibe(false, true); // any press ends vibe mode, and then does what it always does
-    this.driveTo((this.here + 1) % RexLambo.tables.length);
+    this.driveTo((this.here + 1) % FnLambo.tables.length);
   }
 
   /** A swipe left: drives round to the billboard before this one, straight past any in between (none, if there is no way back). */
   goPrevious() {
     if (this.vibe) this.setVibe(false, true);
     if (this.here < 0) return; // still at the start line
-    this.goTo((this.here - 1 + RexLambo.tables.length) % RexLambo.tables.length);
+    this.goTo((this.here - 1 + FnLambo.tables.length) % FnLambo.tables.length);
   }
 
   /** Swallows the click that follows a swipe that began and ended on the same element. */
@@ -935,7 +935,7 @@ class RexLambo extends HTMLElement {
    */
   startEq() {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const BARS = RexLambo.eqBars;
+    const BARS = FnLambo.eqBars;
     const level = new Float32Array(BARS);
     const peak = new Float32Array(BARS);
     // what is drawn: each column's level and peak (as a share of the building's body) snapped to steps, and only moved to
@@ -950,11 +950,11 @@ class RexLambo extends HTMLElement {
     const rose = new Float64Array(BARS);
     const peakRose = new Float64Array(BARS);
     const snap = (cur, v, when, b, now) => {
-      const x = v < 0.005 ? 0 : v * RexLambo.eqSteps;
-      if (Math.abs(x - cur * RexLambo.eqSteps) <= RexLambo.eqHold && x > 0) return cur;
-      const to = Math.round(x) / RexLambo.eqSteps;
+      const x = v < 0.005 ? 0 : v * FnLambo.eqSteps;
+      if (Math.abs(x - cur * FnLambo.eqSteps) <= FnLambo.eqHold && x > 0) return cur;
+      const to = Math.round(x) / FnLambo.eqSteps;
       if (to > cur) when[b] = now;
-      else if (now - when[b] < RexLambo.eqMinOn * 1000) return cur; // not down yet: the lights it would put out have only just come on
+      else if (now - when[b] < FnLambo.eqMinOn * 1000) return cur; // not down yet: the lights it would put out have only just come on
       return to;
     };
     // Each column's own range, so the lights use the whole height of the buildings whatever the music is like: the
@@ -1013,7 +1013,7 @@ class RexLambo extends HTMLElement {
         target = Math.max(Math.min(raw, prev1[b]), Math.min(Math.max(raw, prev1[b]), prev2[b])); // the median of the three
         prev2[b] = prev1[b];
         prev1[b] = raw;
-        level[b] += (target - level[b]) * (target > level[b] ? RexLambo.eqRise : RexLambo.eqFall); // up quicker than down, but never in one jump
+        level[b] += (target - level[b]) * (target > level[b] ? FnLambo.eqRise : FnLambo.eqFall); // up quicker than down, but never in one jump
         peak[b] = Math.max(level[b], peak[b] - 0.02);
         if (level[b] > 0.005 || peak[b] > 0.005) moving = true;
         shown[b] = snap(shown[b], level[b], rose, b, now);
@@ -1042,17 +1042,17 @@ class RexLambo extends HTMLElement {
   }
 
   /**
-   * Starts the soundtrack (once). The tracks in `RexLambo.music` play in a random order, at the slider's volume (see musicAmp). Every
+   * Starts the soundtrack (once). The tracks in `FnLambo.music` play in a random order, at the slider's volume (see musicAmp). Every
    * track is played once before any is repeated (a shuffle, reshuffled when the list runs out), and the first track of
    * a new shuffle is never the one that has just played.
    */
   startMusic() {
-    if (this.audio || !this.musicOn || !RexLambo.music.length) return;
+    if (this.audio || !this.musicOn || !FnLambo.music.length) return;
     let queue = [];
     let last = null;
     const next = () => {
       if (!queue.length) {
-        queue = [...RexLambo.music];
+        queue = [...FnLambo.music];
         for (let i = queue.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [queue[i], queue[j]] = [queue[j], queue[i]];
@@ -1086,7 +1086,7 @@ class RexLambo extends HTMLElement {
     if (this.driving) return;
     // ignore input while this page of the demo is hidden
     if (this.checkVisibility && !this.checkVisibility()) return;
-    const n = RexLambo.tables.length;
+    const n = FnLambo.tables.length;
     const c = this.here;
     let steps = (((k - c) % n) + n) % n; // billboards to put on the road
     if (steps === 0) steps = n;
@@ -1094,7 +1094,7 @@ class RexLambo extends HTMLElement {
     this.journey = {
       s0: c + 1, // where the car is on the strip
       ds: steps + (wraps ? 1 : 0), // gaps to go on the strip
-      p0: -(steps - 1) * RexLambo.stopAt, // where the newest billboard starts
+      p0: -(steps - 1) * FnLambo.stopAt, // where the newest billboard starts
     };
     this.here = k;
     this.driving = true;
@@ -1104,11 +1104,11 @@ class RexLambo extends HTMLElement {
     this.shadowRoot.querySelector(".stage").classList.remove("intro"); // the big INSERT COIN screen is over (until goInitial)
     this.startMusic();
     this.resumeMusic(); // (a no-op unless the browser refused it earlier, e.g. a touch is not a gesture that allows sound)
-    if (this.motion.length < RexLambo.motionCount) this.collectMotion();
+    if (this.motion.length < FnLambo.motionCount) this.collectMotion();
     this.setPrompt("");
     this.announce("Driving.");
     this.hideTable();
-    for (let i = 0; i < steps; i++) this.spawn(-i * RexLambo.stopAt);
+    for (let i = 0; i < steps; i++) this.spawn(-i * FnLambo.stopAt);
     this.updateTrack();
     // reduced motion: no drive, the car is just there at the billboard (the wheels and the road are paused anyway)
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -1133,11 +1133,11 @@ class RexLambo extends HTMLElement {
     if (!this.vibe && this.speedNow <= 0) {
       // the first screen starts with the car stopped; only vibe mode has it cruise (a car still moving, when it is
       // back here from start mode, eases to a stop in attractTick)
-      if (this.motion.length < RexLambo.motionCount) this.collectMotion();
+      if (this.motion.length < FnLambo.motionCount) this.collectMotion();
       return;
     }
     this.attracting = true;
-    if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
+    if (this.motion.length < FnLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
     // The wheels turn with a compositor animation, which the browser only starts a moment after the page has first been drawn
     // (a second or more on a slow machine), while the road, which is drawn on the page itself, starts at once. Setting
     // off before the wheels had started made the car move with its wheels still. So wait until every animation is running.
@@ -1169,9 +1169,9 @@ class RexLambo extends HTMLElement {
     }
     const dt = Math.max(0, Math.min((now - this.last) / 1000, 0.05));
     this.last = now;
-    if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
+    if (this.motion.length < FnLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
     if (this.vibe) {
-      this.speedNow = Math.min(RexLambo.attractSpeed, this.speedNow + dt * 0.5); // eases up to its cruising speed
+      this.speedNow = Math.min(FnLambo.attractSpeed, this.speedNow + dt * 0.5); // eases up to its cruising speed
       this.boost += (2 - this.boost) * Math.min(1, dt * 4); // vibe mode cruises at TURBO speed, which a press then eases back from
     } else {
       // vibe mode has been switched off: ease down to a stop
@@ -1186,8 +1186,8 @@ class RexLambo extends HTMLElement {
         return;
       }
     }
-    const blocks = (this.speedNow * dt) / (this.speedValue * RexLambo.roadPerSpin);
-    this.cityBlocks = (this.cityBlocks + blocks * this.boost) % RexLambo.cityPeriod;
+    const blocks = (this.speedNow * dt) / (this.speedValue * FnLambo.roadPerSpin);
+    this.cityBlocks = (this.cityBlocks + blocks * this.boost) % FnLambo.cityPeriod;
     this.setRate(this.speedNow * this.boost);
     this.drawCity();
     this.beatCar(dt);
@@ -1235,20 +1235,20 @@ class RexLambo extends HTMLElement {
       el.style.transform = "";
       return;
     }
-    const k = RexLambo.beatStretch * this.beat;
+    const k = FnLambo.beatStretch * this.beat;
     el.style.transform = `scale(${1 + k}, ${1 - k})`;
   }
 
   /** Puts the billboards where they are when the car has stopped at the newest one, with no drive in between (reduced motion). */
   arriveNow() {
     const target = this.boards[this.boards.length - 1];
-    const by = RexLambo.stopAt - target.p;
+    const by = FnLambo.stopAt - target.p;
     for (const b of this.boards) {
       b.p += by;
-      RexLambo.place(b.el, b.p);
+      FnLambo.place(b.el, b.p);
     }
     this.boards = this.boards.filter((b) => (b.p < 1 ? true : (b.el.remove(), false)));
-    this.cityBlocks = (this.cityBlocks + by * RexLambo.trip) % RexLambo.cityPeriod;
+    this.cityBlocks = (this.cityBlocks + by * FnLambo.trip) % FnLambo.cityPeriod;
     this.speedNow = 0;
     this.setRate(0);
     this.drawCity();
@@ -1286,21 +1286,21 @@ class RexLambo extends HTMLElement {
 
     const target = this.boards[this.boards.length - 1];
     // road blocks left before the car should be level with its billboard
-    const left = target ? (RexLambo.stopAt - target.p) * RexLambo.trip : 0;
+    const left = target ? (FnLambo.stopAt - target.p) * FnLambo.trip : 0;
     // braking at a steady rate: speed falls with the square root of the distance still to go
     const brake = Math.min(1, Math.sqrt(Math.max(left, 0) / 2.5));
     const accel = Math.min(1, this.speedNow + dt); // speeds up by 1 (full speed) per second
     let speedNow = Math.max(0, Math.min(accel, brake));
 
     // billboards advance at road speed: one block takes speed * roadPerSpin seconds
-    let step = (speedNow * dt) / (RexLambo.trip * speed * RexLambo.roadPerSpin);
+    let step = (speedNow * dt) / (FnLambo.trip * speed * FnLambo.roadPerSpin);
     // The car has stopped only when it has actually reached the billboard, never just because its speed is 0. It arrives
     // in the frame whose step would reach (or pass) the billboard, by exactly the distance left: going past it and being
     // put back the next frame made the billboard jump back a little just before the stop. (The braking slows it steadily
     // right down to the billboard; calling it there from 0.01 blocks out made the last step several times the one before.)
     let arrived = false;
-    if (target && (left <= 0.0001 || step * RexLambo.trip >= left)) {
-      step = Math.max(0, left) / RexLambo.trip;
+    if (target && (left <= 0.0001 || step * FnLambo.trip >= left)) {
+      step = Math.max(0, left) / FnLambo.trip;
       arrived = true;
       speedNow = 0;
     }
@@ -1311,8 +1311,8 @@ class RexLambo extends HTMLElement {
     let gone = false;
     for (const b of this.boards) {
       b.p += step;
-      if (b === target && arrived) b.p = RexLambo.stopAt;
-      if (draw) RexLambo.place(b.el, b.p);
+      if (b === target && arrived) b.p = FnLambo.stopAt;
+      if (draw) FnLambo.place(b.el, b.p);
       if (b.p >= 1) gone = true;
     }
     // drop the billboards that have gone past
@@ -1323,7 +1323,7 @@ class RexLambo extends HTMLElement {
 
     // the cityscape is part of the ground, so it scrolls at road speed too, wrapping once per pattern repeat
     this.cityBlocks =
-      (this.cityBlocks + step * RexLambo.trip) % RexLambo.cityPeriod;
+      (this.cityBlocks + step * FnLambo.trip) % FnLambo.cityPeriod;
     if (draw) {
       this.drawCity();
       this.updateTrack();
@@ -1375,10 +1375,10 @@ class RexLambo extends HTMLElement {
   startStars() {
     const canvas = this.shadowRoot.querySelector(".stars");
     const ctx = canvas.getContext("2d");
-    const stars = RexLambo.makeStars();
+    const stars = FnLambo.makeStars();
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // A shooting star: every RexLambo.shootingEvery seconds there is a 1 in RexLambo.shootingOdds chance of one, starting
+    // A shooting star: every FnLambo.shootingEvery seconds there is a 1 in FnLambo.shootingOdds chance of one, starting
     // anywhere in the sky and streaking down to the lower left, from the top right, for about a second. Its place
     // is kept as fractions of the canvas, so a resize in mid flight doesn't matter.
     let shooter = null;
@@ -1474,10 +1474,10 @@ class RexLambo extends HTMLElement {
       // a twinkle takes seconds, so 15 frames a second is plenty; a shooting star needs 30 to look smooth
       if (now - lastDraw < (shooter ? 33 : 66)) return;
       lastDraw = now;
-      if (!nextRoll) nextRoll = now + RexLambo.shootingEvery * 1000;
+      if (!nextRoll) nextRoll = now + FnLambo.shootingEvery * 1000;
       if (now >= nextRoll) {
-        nextRoll = now + RexLambo.shootingEvery * 1000;
-        if (!shooter && Math.random() < 1 / RexLambo.shootingOdds) spawnShooter(now);
+        nextRoll = now + FnLambo.shootingEvery * 1000;
+        if (!shooter && Math.random() < 1 / FnLambo.shootingOdds) spawnShooter(now);
       }
       draw(now);
     };
@@ -1543,7 +1543,7 @@ class RexLambo extends HTMLElement {
     rows.forEach(([count, dist, extra]) => {
       for (let i = 0; i < count; i++) {
         pattern.push({
-          y: (i + rnd() * 0.6) * (RexLambo.cityPeriod / count),
+          y: (i + rnd() * 0.6) * (FnLambo.cityPeriod / count),
           x: -(dist + rnd() * 60),
           w: 20 + rnd() * 30,
           d: 20 + rnd() * 30,
@@ -1606,15 +1606,15 @@ class RexLambo extends HTMLElement {
     // each time it wraps. So the windows are worked out once per building in the pattern and shared by every repeat.
     const cols = (n) => Math.max(1, Math.floor(n / 6));
     const shared = pattern.map((b) => ({
-      roadWin: windows(cols(b.d), cols(b.h + RexLambo.sinkDepth)), // the face looking at the road
-      nearWin: windows(cols(b.w), cols(b.h + RexLambo.sinkDepth)), // the face looking at the camera
+      roadWin: windows(cols(b.d), cols(b.h + FnLambo.sinkDepth)), // the face looking at the road
+      nearWin: windows(cols(b.w), cols(b.h + FnLambo.sinkDepth)), // the face looking at the camera
     }));
     const buildings = [];
     for (let rep = 0; rep < 10; rep++) {
       pattern.forEach((b, i) => {
         buildings.push({
           ...b,
-          by: b.y + rep * RexLambo.cityPeriod, // position along the road, in blocks
+          by: b.y + rep * FnLambo.cityPeriod, // position along the road, in blocks
           ...shared[i],
           // scratch fields for drawCity: where the building is this frame, and how far from the camera
           y: 0,
@@ -1646,7 +1646,7 @@ class RexLambo extends HTMLElement {
           w.on = !w.on;
           flipped = true;
         }
-        w.next = now + RexLambo.nextLightDelay();
+        w.next = now + FnLambo.nextLightDelay();
       }
       if (w.next < soonest) soonest = w.next;
     }
@@ -1672,7 +1672,7 @@ class RexLambo extends HTMLElement {
   startCity() {
     const canvas = this.shadowRoot.querySelector(".skyline");
     this.cityCtx = canvas.getContext("2d");
-    const city = RexLambo.makeCity();
+    const city = FnLambo.makeCity();
     this.cityData = city.buildings;
     this.lightCells = city.cells;
     this.nextFlip = 0;
@@ -1713,7 +1713,7 @@ class RexLambo extends HTMLElement {
    * beside it. The world is laid out like the .world element: x across the road (negative is the far side), y along
    * it in cqw (the strip is shifted back by 20 blocks and by `cityBlocks` as the car drives), z up. A point is turned
    * about the middle of the road strip by rotateZ(42deg) then rotateX(70deg), and then foreshortened by the
-   * perspective (RexLambo.perspective, centred where the scene is built around). Buildings are painted furthest first.
+   * perspective (FnLambo.perspective, centred where the scene is built around). Buildings are painted furthest first.
    *
    * This runs every frame while driving, so it avoids allocating: projected points are written into one reused
    * Float64Array `S` (three numbers per point: screen x, screen y and the perspective scale), and the lit windows of
@@ -1744,9 +1744,9 @@ class RexLambo extends HTMLElement {
       P2 = 30,
       P3 = 33;
 
-    const { cz, sz, cx, sx } = RexLambo.tilt;
+    const { cz, sz, cx, sx } = FnLambo.tilt;
     const road = 76; // --w in cqw
-    const persp = RexLambo.perspective;
+    const persp = FnLambo.perspective;
     // projects a point into S at offset o. False if it is at or behind the camera.
     const proj = (x, y, z, o) => {
       const dx = x - road / 2;
@@ -1833,7 +1833,7 @@ class RexLambo extends HTMLElement {
     const eqLights = (alongX, fixed, start, span, h, lvl, pk, m) => {
       const cs = 6 * m;
       const ws = cs - 2;
-      const T = h + RexLambo.eqBelow;
+      const T = h + FnLambo.eqBelow;
       const cols = Math.max(1, Math.floor(span / cs));
       // the lights are spread across the face with the same gap between them as at both edges (not packed from one edge, which
       // left the leftover width as a wider gap at the other)
@@ -1857,7 +1857,7 @@ class RexLambo extends HTMLElement {
         ctx.lineTo(S[P3], S[P3 + 1]);
         ctx.closePath();
       };
-      const colors = RexLambo.eqColors;
+      const colors = FnLambo.eqColors;
       const band = T / colors.length;
       const rows = Math.floor((T - cs) / cs); // the last row, a window's height up from the foot
       for (let ci = 0; ci < colors.length; ci++) {
@@ -1885,7 +1885,7 @@ class RexLambo extends HTMLElement {
 
     // The walls run on down below ground level (a long way, in cqw) so their bottoms are never seen: they pass
     // behind the barrier, which is painted over the canvas, rather than ending in a line in the open.
-    const sink = -RexLambo.sinkDepth;
+    const sink = -FnLambo.sinkDepth;
     for (const b of list) {
       const x0 = b.x;
       const x1 = b.x + b.w;
@@ -1941,15 +1941,15 @@ class RexLambo extends HTMLElement {
         // the next changes smoothly rather than jumping to its neighbour's level. (It used to follow where the building
         // would be at normal speed, so TURBO didn't speed the equaliser up, but in vibe mode, always at TURBO, that drifted
         // ever further from where the buildings are and buildings flashed between unrelated columns.)
-        const at = Math.min(RexLambo.eqBars - 1, Math.max(0, ((minX + maxX) / 2 / W) * RexLambo.eqBars - 0.5));
+        const at = Math.min(FnLambo.eqBars - 1, Math.max(0, ((minX + maxX) / 2 / W) * FnLambo.eqBars - 0.5));
         const band = Math.floor(at);
-        const next = Math.min(band + 1, RexLambo.eqBars - 1);
+        const next = Math.min(band + 1, FnLambo.eqBars - 1);
         const t = at - band;
         // as a share of the building's whole visible body, so a full column lights it from foot to roof
-        const T = h + RexLambo.eqBelow;
+        const T = h + FnLambo.eqBelow;
         const lvl = (this.eqLevel[band] * (1 - t) + this.eqLevel[next] * t) * T;
         const pk = (this.eqPeak[band] * (1 - t) + this.eqPeak[next] * t) * T;
-        const m = RexLambo.eqCell; // every building's lights are the same size
+        const m = FnLambo.eqCell; // every building's lights are the same size
         eqLights(false, x1, y0, b.d, h, lvl, pk, m);
         eqLights(true, y1, x0, b.w, h, lvl, pk, m);
       } else if (!this.musicOn) {
@@ -1970,9 +1970,9 @@ class RexLambo extends HTMLElement {
   static y1 = -30;
   static stopY = 29.65;
   static gap = 7;
-  static y0 = RexLambo.stopY + RexLambo.gap;
-  static trip = RexLambo.y0 - RexLambo.y1; // blocks travelled over a billboard's whole life
-  static stopAt = RexLambo.gap / RexLambo.trip; // how far along its life it is when the car stops
+  static y0 = FnLambo.stopY + FnLambo.gap;
+  static trip = FnLambo.y0 - FnLambo.y1; // blocks travelled over a billboard's whole life
+  static stopAt = FnLambo.gap / FnLambo.trip; // how far along its life it is when the car stops
 
   /**
    * Puts a new billboard on the road, on the far side. p is how far along its trip it is: 0 is the start of the road,
@@ -1986,13 +1986,13 @@ class RexLambo extends HTMLElement {
     const board = document.createElement("div");
     board.className = "board";
     board.setAttribute("aria-hidden", "true"); // the sign's picture; what it says is in the panel
-    RexLambo.place(board, p);
+    FnLambo.place(board, p);
 
     // the billboards go round the entries in `tables` in order, so every sign belongs to a text panel
-    const idx = (this.billboardCount - 1) % RexLambo.tables.length;
+    const idx = (this.billboardCount - 1) % FnLambo.tables.length;
     const sign = document.createElement("div");
     sign.className = "sign";
-    sign.appendChild(RexLambo.paint(idx % RexLambo.arts.length, this.avatarSrc));
+    sign.appendChild(FnLambo.paint(idx % FnLambo.arts.length, this.avatarSrc));
     board.appendChild(sign);
     board.insertAdjacentHTML(
       "beforeend",
@@ -2063,14 +2063,14 @@ class RexLambo extends HTMLElement {
     cv.height = 6;
     cv.setAttribute("role", "img");
     cv.setAttribute("aria-label", str);
-    RexLambo.text(cv.getContext("2d"), s, 0, 0, "#ffffff", "#c2207a");
+    FnLambo.text(cv.getContext("2d"), s, 0, 0, "#ffffff", "#c2207a");
     return cv;
   }
 
   static text(ctx, str, x, y, color, shadow) {
     let cx = x;
     for (const ch of str) {
-      const g = RexLambo.font[ch];
+      const g = FnLambo.font[ch];
       if (g) {
         // the drop shadow goes down first so every pixel of the glyph is painted over it
         if (shadow) {
@@ -2096,13 +2096,13 @@ class RexLambo extends HTMLElement {
   // the photo for the profile billboard: set with the avatar attribute, "./me.jpg" by default (relative, so it works
   // under a GitHub Pages sub path). One Image is shared by every profile billboard that uses the same url.
   static avatarSrc = "./me.jpg";
-  static avatar(src = RexLambo.avatarSrc) {
-    RexLambo._avatars ??= new Map();
-    let img = RexLambo._avatars.get(src);
+  static avatar(src = FnLambo.avatarSrc) {
+    FnLambo._avatars ??= new Map();
+    let img = FnLambo._avatars.get(src);
     if (!img) {
       img = new Image();
       img.src = src;
-      RexLambo._avatars.set(src, img);
+      FnLambo._avatars.set(src, img);
     }
     return img;
   }
@@ -2130,10 +2130,10 @@ class RexLambo extends HTMLElement {
       c.fillRect(0, 0, 64, 6);
       c.fillStyle = "#b3156b";
       c.fillRect(0, 5, 64, 1);
-      RexLambo.text(
+      FnLambo.text(
         c,
         "PLAYER 1",
-        RexLambo.mid("PLAYER 1"),
+        FnLambo.mid("PLAYER 1"),
         0,
         "#ffffff",
         "#7a1f6b",
@@ -2161,10 +2161,10 @@ class RexLambo extends HTMLElement {
       ].forEach(([x, y]) => c.fillRect(x, y, 1, 1));
 
       // name, level and two stat bars on the right
-      RexLambo.text(c, "NATHAN", 31, 8, "#7df3ff", "#005f7a");
-      RexLambo.text(c, "LV 99", 31, 14, "#fff3a8", "#8a5a00");
+      FnLambo.text(c, "NATHAN", 31, 8, "#7df3ff", "#005f7a");
+      FnLambo.text(c, "LV 99", 31, 14, "#fff3a8", "#8a5a00");
       const bar = (y, label, fill, color) => {
-        RexLambo.text(c, label, 31, y, "#ff4fa3");
+        FnLambo.text(c, label, 31, y, "#ff4fa3");
         c.fillStyle = "#2b1b55";
         c.fillRect(44, y + 1, 18, 3);
         c.fillStyle = color;
@@ -2176,7 +2176,7 @@ class RexLambo extends HTMLElement {
       bar(26, "INT", 18, "#7df3ff");
 
       // the photo itself: shrunk to 20 x 20 so it turns into big chunky pixels, then given a neon duotone
-      const img = RexLambo.avatar(avatarSrc);
+      const img = FnLambo.avatar(avatarSrc);
       const paintPhoto = () => {
         const tmp = document.createElement("canvas");
         tmp.width = tmp.height = 20;
@@ -2222,17 +2222,17 @@ class RexLambo extends HTMLElement {
       c.fillRect(0, 31, 64, 1);
       c.fillRect(0, 6, 1, 26);
       c.fillRect(63, 6, 1, 26);
-      RexLambo.text(
+      FnLambo.text(
         c,
         "LEET SKILLS",
-        RexLambo.mid("LEET SKILLS"),
+        FnLambo.mid("LEET SKILLS"),
         1,
         "#eafff3",
         "#0b6b46",
       );
       // the meters: a label, a dark track and a coloured bar with a brighter top edge
       const meter = (y, label, fill, color) => {
-        RexLambo.text(c, label, 4, y, "#4dff9a");
+        FnLambo.text(c, label, 4, y, "#4dff9a");
         c.fillStyle = "#0b2a22";
         c.fillRect(21, y, 39, 5);
         c.fillStyle = color;
@@ -2267,10 +2267,10 @@ class RexLambo extends HTMLElement {
       c.fillRect(0, 0, 64, 7);
       c.fillStyle = "#b8431f";
       c.fillRect(0, 6, 64, 1);
-      RexLambo.text(
+      FnLambo.text(
         c,
         "THE HUMAN",
-        RexLambo.mid("THE HUMAN"),
+        FnLambo.mid("THE HUMAN"),
         1,
         "#fff8e0",
         "#8a2f10",
@@ -2281,7 +2281,7 @@ class RexLambo extends HTMLElement {
         c.fillRect(x, 9, 18, 22);
         c.fillStyle = "#150a35";
         c.fillRect(x + 1, 10, 16, 20);
-        RexLambo.text(
+        FnLambo.text(
           c,
           label,
           x + Math.floor((18 - (label.length * 4 - 1)) / 2),
@@ -2293,7 +2293,7 @@ class RexLambo extends HTMLElement {
 
       // cycling: a bicycle, wheels and frame
       panel(2, "#4dff9a", "CYCL");
-      RexLambo.sprite(
+      FnLambo.sprite(
         c,
         [
           "....111...11...",
@@ -2349,7 +2349,7 @@ class RexLambo extends HTMLElement {
     art.height = 32;
     const ctx = art.getContext("2d");
     ctx.imageSmoothingEnabled = false;
-    RexLambo.arts[index](ctx, avatarSrc);
+    FnLambo.arts[index](ctx, avatarSrc);
     // What is shown is the art blown up 8 times, with the scanlines and the faint glare drawn into the same picture. As a
     // layer over the sign they were sometimes drawn a moment after the sign came into view (at 4K), and popped in.
     const cv = document.createElement("canvas");
@@ -2380,7 +2380,7 @@ class RexLambo extends HTMLElement {
     };
     compose();
     // the photo billboard draws its photo when it has loaded (after the art's own listener, so this comes second)
-    const img = RexLambo._avatars?.get(avatarSrc);
+    const img = FnLambo._avatars?.get(avatarSrc);
     if (img && !(img.complete && img.naturalWidth)) img.addEventListener("load", compose, { once: true });
     return cv;
   }
@@ -2391,38 +2391,38 @@ class RexLambo extends HTMLElement {
     const speed = (this.speedValue = this.speed);
     this.frozen = this.hasAttribute("paused"); // (tick reads these every frame, so they are kept rather than looked up)
     stage.style.setProperty("--spin", `${speed}s`);
-    stage.style.setProperty("--road", `${speed * RexLambo.roadPerSpin}s`);
+    stage.style.setProperty("--road", `${speed * FnLambo.roadPerSpin}s`);
     stage.classList.toggle("paused", this.hasAttribute("paused"));
   }
 
   render() {
-    const src = this.getAttribute("src") || RexLambo.defaultSrc;
+    const src = this.getAttribute("src") || FnLambo.defaultSrc;
     // five big holes and five bolts round the hub, each turned by its own --a
     const ring = (tag, first) =>
       [0, 72, 144, 216, 288]
         .map((a) => `<${tag} style="--a:${a + first}deg"></${tag}>`)
         .join("");
     // the progress strip's mini billboards, one for each table, spaced evenly between START and the finish line
-    const stops = RexLambo.tables
+    const stops = FnLambo.tables
       .map(
         (t, i) =>
-          `<button type="button" class="stop" style="--at:${(i + 1) / (RexLambo.tables.length + 1)}" aria-label="Drive to ${RexLambo.esc(t.title)}"><b></b></button>`,
+          `<button type="button" class="stop" style="--at:${(i + 1) / (FnLambo.tables.length + 1)}" aria-label="Drive to ${FnLambo.esc(t.title)}"><b></b></button>`,
       )
       .join("");
     // a piece starts barrierBlocks blocks after the one before; a block is 76cqw and the patterns repeat every 48cqw, so the
     // pieces are given the shift (--off) that makes their patterns join up
     const barrier = Array.from(
-      { length: RexLambo.barrierPieces },
+      { length: FnLambo.barrierPieces },
       (_, i) =>
-        `<div class="barrier" style="--i:${i};--off:${-((RexLambo.barrierBlocks * i * 76) % 48)}cqw"><div class="lid"></div><div class="rail"></div></div>`,
+        `<div class="barrier" style="--i:${i};--off:${-((FnLambo.barrierBlocks * i * 76) % 48)}cqw"><div class="lid"></div><div class="rail"></div></div>`,
     ).join("");
     const roadTiles = Array.from(
-      { length: RexLambo.roadTiles },
+      { length: FnLambo.roadTiles },
       (_, i) => `<div class="plane" style="--j:${i}"></div>`,
     ).join("");
     const spokes = ring("b", 0);
     const bolts = ring("i", 36);
-    const wheels = RexLambo.wheels
+    const wheels = FnLambo.wheels
       .map(
         (w) => `
         <div class="wheel ${w.name}"
@@ -2461,8 +2461,8 @@ class RexLambo extends HTMLElement {
         :host([fill]) { width: 100%; height: 100%; container-type: size; }
         :host([fill]) .stage { aspect-ratio: auto; min-height: 0; height: 100%; width: 100%; border-radius: 0; container-type: normal; --dw: min(100cqw, 160cqh); }
         .stage {
-          --spin: ${RexLambo.defaultSpeed}s;
-          --road: ${RexLambo.defaultSpeed * RexLambo.roadPerSpin}s;
+          --spin: ${FnLambo.defaultSpeed}s;
+          --road: ${FnLambo.defaultSpeed * FnLambo.roadPerSpin}s;
           --dw: 100cqw; /* the width of the .view, the 16:10 layout (see :host([fill]) .stage, where it is worked out from the height) */
           --car: 30cqw;
           /* font sizes of the controls (top left) and the progress strip (bottom left), shared so the text panel can sit between them */
@@ -2692,7 +2692,7 @@ class RexLambo extends HTMLElement {
           --wx: calc(120cqw + 130cqw * var(--ex, 0));
           position: absolute;
           inset: 0;
-          perspective: ${RexLambo.perspective}cqw;
+          perspective: ${FnLambo.perspective}cqw;
           perspective-origin: 52% 62%;
           pointer-events: none;
         }
@@ -2711,8 +2711,8 @@ class RexLambo extends HTMLElement {
           position: absolute;
           left: 0;
           width: 100%;
-          top: calc(var(--w) * ${RexLambo.roadTileBlocks} * var(--j));
-          height: calc(var(--w) * ${RexLambo.roadTileBlocks} + 0.3cqw); /* a hair longer than the tile, with the same pattern, so no seam shows */
+          top: calc(var(--w) * ${FnLambo.roadTileBlocks} * var(--j));
+          height: calc(var(--w) * ${FnLambo.roadTileBlocks} + 0.3cqw); /* a hair longer than the tile, with the same pattern, so no seam shows */
           transform: translateZ(0);
           box-sizing: border-box;
           background-color: #2b2b2b;
@@ -3287,8 +3287,8 @@ class RexLambo extends HTMLElement {
          */
         .world {
           --x: -22cqw;
-          --y0: calc(var(--w) * ${RexLambo.y0});
-          --y1: calc(var(--w) * ${RexLambo.y1});
+          --y0: calc(var(--w) * ${FnLambo.y0});
+          --y1: calc(var(--w) * ${FnLambo.y1});
           position: absolute;
           left: 52%;
           top: 62%;
@@ -3311,10 +3311,10 @@ class RexLambo extends HTMLElement {
           position: absolute;
           left: 0;
           top: 0;
-          width: calc(var(--w) * ${RexLambo.barrierBlocks}); /* one piece of the barrier (see RexLambo.barrierPieces); piece --i starts barrierBlocks blocks after the one before */
+          width: calc(var(--w) * ${FnLambo.barrierBlocks}); /* one piece of the barrier (see FnLambo.barrierPieces); piece --i starts barrierBlocks blocks after the one before */
           height: 22cqw;
           transform-origin: 0 100%;
-          transform: translate3d(-0.4cqw, calc(var(--w) * (8 + ${RexLambo.barrierBlocks} * var(--i, 0))), 0) rotateZ(90deg) rotateX(-90deg);
+          transform: translate3d(-0.4cqw, calc(var(--w) * (8 + ${FnLambo.barrierBlocks} * var(--i, 0))), 0) rotateZ(90deg) rotateX(-90deg);
           transform-style: preserve-3d;
           background:
             /* amber reflector lamps with a soft halo */
@@ -3368,7 +3368,7 @@ class RexLambo extends HTMLElement {
           width: 80cqw;
           height: 82cqw;
           transform-origin: 0 100%;
-          transform: translate3d(var(--x), var(--y0), 0) rotateZ(90deg) rotateX(-90deg); /* p = 0; see RexLambo.place */
+          transform: translate3d(var(--x), var(--y0), 0) rotateZ(90deg) rotateX(-90deg); /* p = 0; see FnLambo.place */
         }
         .sign {
           position: absolute;
@@ -3435,7 +3435,7 @@ class RexLambo extends HTMLElement {
         ${wheels}</div>
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
       <div class="how" aria-hidden="true"><span class="touch"><svg viewBox="0 0 24 24"><path class="tap" d="M6.6 4.5a3.9 3.9 0 0 1 7.8 0"/><path d="M9 12V4.6a1.5 1.5 0 0 1 3 0V10l4.6 1a2 2 0 0 1 1.6 2.2l-.7 5.3a2 2 0 0 1-2 1.7H11a2 2 0 0 1-1.6-.8L5.6 14.6a1.4 1.4 0 0 1 2-1.9L9 14"/></svg>touch to start</span><span class="desk"><svg viewBox="0 0 24 24"><path class="solid" d="M6 3l12.5 7.6-5.4 1.3 3.3 6-2.4 1.3-3.3-6L6.5 17z"/></svg>click or hit<svg class="key" viewBox="0 0 30 24"><rect x="1.5" y="3.5" width="27" height="17" rx="3"/><path d="M22 8v4.5H9"/><path d="M12 9.5l-3 3 3 3"/></svg>enter to start</span></div>
-      <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><div class="vol"><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button><div class="slider"><input type="range" min="0" max="100" step="1" value="${Math.round(RexLambo.musicVolume * 100)}" aria-label="Volume" style="--v: ${Math.round(RexLambo.musicVolume * 100)}%" /></div></div></div>
+      <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><div class="vol"><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button><div class="slider"><input type="range" min="0" max="100" step="1" value="${Math.round(FnLambo.musicVolume * 100)}" aria-label="Volume" style="--v: ${Math.round(FnLambo.musicVolume * 100)}%" /></div></div></div>
       <div class="swipe prev" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div><div class="swipe next" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div>
       <div class="esc" aria-hidden="true">hit<svg viewBox="0 0 34 24"><rect x="1.5" y="3.5" width="31" height="17" rx="3"/><text x="17" y="15.6">ESC</text></svg>to return</div>
       <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
@@ -3446,4 +3446,4 @@ class RexLambo extends HTMLElement {
   }
 }
 
-customElements.define("rex-lambo", RexLambo);
+customElements.define("fn-lambo", FnLambo);

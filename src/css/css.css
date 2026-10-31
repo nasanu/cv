@@ -3,7 +3,7 @@
 :root {
   color-scheme: light dark;
   /* default light theme */
-  --rex-font:  "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Osaka,
+  --fn-font:  "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Osaka,
     "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
 
   --accent: light-dark(#09c, #0099cc);

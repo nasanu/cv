@@ -133,4 +133,4 @@ class Burst extends HTMLElement {
     }
   }
 }
-customElements.define("rex-burst", Burst);
+customElements.define("fn-burst", Burst);

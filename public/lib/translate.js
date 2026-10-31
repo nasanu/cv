@@ -93,4 +93,4 @@ class TranslateElement extends HTMLElement {
     shadow.appendChild(document.createTextNode(t(this.innerHTML)));
   }
 }
-customElements.define("rex-translate", TranslateElement);
+customElements.define("fn-translate", TranslateElement);

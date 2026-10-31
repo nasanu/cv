@@ -106,4 +106,4 @@ class LangSelect extends HTMLElement {
     shadow.appendChild(wrap);
   }
 }
-customElements.define("rex-langselect", LangSelect);
+customElements.define("fn-langselect", LangSelect);

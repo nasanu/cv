@@ -7,7 +7,7 @@ export const jsFile = "input.js";
 <div class="desc">
   A generic input styled for <a
     href="https://rex.rakuten.design/en/design/components/"
-    target="_blank">ReX</a
+    target="_blank">Fn</a
   >. This component fires <a
     href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
     target="_blank"
@@ -32,10 +32,10 @@ export const jsFile = "input.js";
   <pre><code class="usage language-javascript">
   {`
 // import the component
-import {rex-input} from TBA;
+import {fn-input} from TBA;
 
 //use it in your HTML
-<rex-input type="text" name="fName" placeholder="input stuff"></rex-input>
+<fn-input type="text" name="fName" placeholder="input stuff"></fn-input>
 
 //add an event listener to get the input, this is a custom event 
 //event name is the prop name + Event
@@ -176,8 +176,8 @@ document.addEventListener("fNameEvent", ((e: CustomEvent) => {
     <br />
     The name of the event is the value of the component's name prop + "Event". So
     if you use <code>
-      &lt;rex-input type="text" name="fName" placeholder="input
-      stuff"&gt;&lt;/rex-input&gt;
+      &lt;fn-input type="text" name="fName" placeholder="input
+      stuff"&gt;&lt;/fn-input&gt;
     </code> you will need to listen to the "fNameEvent" event: <code>
       document.addEventListener("fNameEvent"...
     </code>
@@ -199,7 +199,7 @@ document.addEventListener("fNameEvent", ((e: CustomEvent) => {
 
   //playground code
   const liveDemo = () => {
-    const rexComponent = document.createElement("rex-input");
+    const fnComponent = document.createElement("fn-input");
     const demo = document.querySelector("#Input-wrap #liveDemo");
     if (demo) {
       demo.innerHTML = "";
@@ -213,55 +213,55 @@ document.addEventListener("fNameEvent", ((e: CustomEvent) => {
         .selectedIndex
     ].value;
     if (type) {
-      rexComponent.setAttribute("type", type);
+      fnComponent.setAttribute("type", type);
     }
     const name = (
       document.querySelector("#Input-wrap #propName") as HTMLInputElement
     ).value;
     if (name) {
-      rexComponent.setAttribute("name", name);
+      fnComponent.setAttribute("name", name);
     }
     const required = (
       document.querySelector("#Input-wrap #propRequired") as HTMLInputElement
     ).value;
     if (required) {
-      rexComponent.setAttribute("required", required);
+      fnComponent.setAttribute("required", required);
     }
     const placeholder = (
       document.querySelector("#Input-wrap #propPlaceholder") as HTMLInputElement
     ).value;
     if (placeholder) {
-      rexComponent.setAttribute("placeholder", placeholder);
+      fnComponent.setAttribute("placeholder", placeholder);
     }
     const error = (
       document.querySelector("#Input-wrap #propError") as HTMLInputElement
     ).value;
     if (error) {
-      rexComponent.setAttribute("error", error);
+      fnComponent.setAttribute("error", error);
     }
     const title = (
       document.querySelector("#Input-wrap #propTitle") as HTMLInputElement
     ).value;
     if (title) {
-      rexComponent.setAttribute("title", title);
+      fnComponent.setAttribute("title", title);
     }
     const footer = (
       document.querySelector("#Input-wrap #propFooter") as HTMLInputElement
     ).value;
     if (footer) {
-      rexComponent.setAttribute("footer", footer);
+      fnComponent.setAttribute("footer", footer);
     }
     const value = (
       document.querySelector("#Input-wrap #propValue") as HTMLInputElement
     ).value;
     if (value) {
-      rexComponent.setAttribute("value", value);
+      fnComponent.setAttribute("value", value);
     }
 
     (
       document.querySelector("#Input-wrap #liveCode code") as HTMLElement
-    ).innerText = rexComponent.outerHTML;
-    demo?.appendChild(rexComponent);
+    ).innerText = fnComponent.outerHTML;
+    demo?.appendChild(fnComponent);
 
     (document.querySelector(
       "#Input-wrap #outputbox legend"

@@ -14,7 +14,7 @@ class SearchSelect extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" });
     this.wrap = document.createElement("div");
     this.wrap.setAttribute("class", "search-select");
-    this.input = document.createElement("rex-input");
+    this.input = document.createElement("fn-input");
     this.input.setAttribute("name", "searchSelect");
     this.input.setAttribute("id", "searchSelect");
     this.wrap.appendChild(this.input);
@@ -28,11 +28,11 @@ class SearchSelect extends HTMLElement {
     const style = document.createElement("style");
     style.textContent = `
       *{box-sizing:border-box}
-        .search-select rex-input {
+        .search-select fn-input {
       position: relative;
       z-index: 99;
     }
-      rex-input::part(form-input){
+      fn-input::part(form-input){
       margin:0}
     .search-select {
       position: relative;
@@ -90,7 +90,7 @@ class SearchSelect extends HTMLElement {
     //events
 
     this.shadowRoot.addEventListener("click", () => {
-      if (!this.wrap.querySelector("rex-input:focus")) {
+      if (!this.wrap.querySelector("fn-input:focus")) {
         this.close.bind(this);
       }
     });
@@ -426,4 +426,4 @@ class SearchSelect extends HTMLElement {
   };
 }
 
-customElements.define("rex-searchselect", SearchSelect);
+customElements.define("fn-searchselect", SearchSelect);

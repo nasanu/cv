@@ -1,4 +1,4 @@
-# rex-lambo
+# fn-lambo
 
 A retrowave scene as a single web component: a pixel art Lamborghini Countach with spinning wheels, on a neon highway
 beside a wireframe skyline, a big moon and twinkling stars. On the INSERT COIN screen the car waits stopped on an empty road (it cruises there in vibe mode), with no billboards, until Enter, Space or a tap, drives to a
@@ -10,7 +10,7 @@ No dependencies, no build step. It is one JavaScript file plus a few images.
 
 | File                    | What it is                                                            |
 | ----------------------- | --------------------------------------------------------------------- |
-| `lambo.js`              | The component (`<rex-lambo>`). Defines the custom element when loaded |
+| `lambo.js`              | The component (`<fn-lambo>`). Defines the custom element when loaded |
 | `index.html`            | A minimal demo page showing how to use it                             |
 {{ASSETS}}
 
@@ -21,7 +21,7 @@ sub path such as GitHub Pages.
 ## Use it
 
 ```html
-<rex-lambo src="./lambo-transparent.png" avatar="./me.jpg" speed="0.2"></rex-lambo>
+<fn-lambo src="./lambo-transparent.png" avatar="./me.jpg" speed="0.2"></fn-lambo>
 <script src="./lambo.js"></script>
 ```
 
@@ -33,7 +33,7 @@ height 28rem). `--borderRadius` sets the corner radius.
 
 | Attribute | Default                  | Meaning                                                                    |
 | --------- | ------------------------ | -------------------------------------------------------------------------- |
-| `src`     | `./lambo-transparent.png` | The car image. Wheels are drawn over it, so a different car needs new wheel positions (`RexLambo.wheels`) |
+| `src`     | `./lambo-transparent.png` | The car image. Wheels are drawn over it, so a different car needs new wheel positions (`FnLambo.wheels`) |
 | `avatar`  | `./me.jpg`               | The photo on the profile billboard. Read when the component connects       |
 | `speed`   | `0.2`                    | Seconds per wheel revolution. Smaller is faster. Everything moves in step  |
 | `paused`  | (absent)                 | Freezes the wheels, road and billboards while present                      |
@@ -71,7 +71,7 @@ height 28rem). `--borderRadius` sets the corner radius.
 
 ## Changing the content
 
-Everything shown at each stop lives in the static array `RexLambo.tables` at the top of `lambo.js`. There is one entry
+Everything shown at each stop lives in the static array `FnLambo.tables` at the top of `lambo.js`. There is one entry
 per billboard, and the billboards go round the entries in order:
 
 ```js
@@ -94,7 +94,7 @@ per billboard, and the billboards go round the entries in order:
 - A download link to a file on the same site downloads it. A link to another site (or a youtube link) opens in a new tab.
 - Media and links are laid out in a grid of equal size thumbnails and buttons.
 
-The pixel art on each billboard is drawn in code in the static array `RexLambo.arts` (a 64 x 32 canvas each). Entry `n`
+The pixel art on each billboard is drawn in code in the static array `FnLambo.arts` (a 64 x 32 canvas each). Entry `n`
 of `arts` goes with entry `n` of `tables`. If there are more tables than arts, the arts are reused.
 
 ## Notes

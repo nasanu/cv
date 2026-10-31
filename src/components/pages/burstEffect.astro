@@ -5,7 +5,7 @@ export const jsFile = "burst.js";
 ---
 
 <style>
-  rex-burst {
+  fn-burst {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -27,7 +27,7 @@ export const jsFile = "burst.js";
 
 <div class="demo-wrap">
   <div class="text">click</div>
-  <rex-burst particleCount={40} duration={0.9}></rex-burst>
+  <fn-burst particleCount={40} duration={0.9}></fn-burst>
 </div>
 <h3>In Code</h3>
 <div class="code-wrap">
@@ -37,7 +37,7 @@ export const jsFile = "burst.js";
   import "../lib/burst";
   
   //use it in your HTML
-  <rex-burst particleCount={40} duration={0.9}></rex-burst>
+  <fn-burst particleCount={40} duration={0.9}></fn-burst>
   `}
   </code></pre>
   <br />
@@ -51,7 +51,7 @@ export const jsFile = "burst.js";
 
   const loadEffect = () => {
     const container: any = document.querySelector(
-      "#BurstEffect-wrap rex-burst"
+      "#BurstEffect-wrap fn-burst"
     );
     if (container) {
       setTimeout(() => {

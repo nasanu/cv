@@ -14,10 +14,10 @@ export const title = "Search Select OLD";
   <pre><code class="usage language-javascript">
     {`
   // import the component
-  import {rex-theme} from TBA;
+  import {fn-theme} from TBA;
   
   //use it in your HTML
-  <rex-theme></rex-theme>
+  <fn-theme></fn-theme>
   `}
   </code></pre>
   <br />
@@ -27,19 +27,19 @@ export const title = "Search Select OLD";
   <br />
 
   <div class="search-select">
-    <rex-input
+    <fn-input
       id="searchSelect"
       placeholder="search select"
       name="searchSelect"
       title="up? down? Who knows"
-      footer="what..."></rex-input>
+      footer="what..."></fn-input>
     <div class="list-wrap" tabindex="2">
       <div class="inner"></div>
     </div>
   </div>
 
   <style>
-    .search-select rex-input {
+    .search-select fn-input {
       position: relative;
       z-index: 99;
     }
@@ -129,14 +129,14 @@ export const title = "Search Select OLD";
 
         if (!code) {
           document
-            .querySelector(".search-select rex-input")!
+            .querySelector(".search-select fn-input")!
             .setAttribute("value", e.target.textContent);
           close();
         }
       } else if (type === "focusin" || type === "click") {
         wrap.classList.add("open");
         (
-          document.querySelector(".search-select rex-input") as HTMLElement
+          document.querySelector(".search-select fn-input") as HTMLElement
         ).focus();
       } else if (type === "focusout") {
         if (!document.querySelector(".search-select:focus-within")) {
@@ -171,7 +171,7 @@ export const title = "Search Select OLD";
       });
     };
     document.addEventListener("click", (e) => {
-      if (!document.querySelector(".search-select rex-input:focus")) {
+      if (!document.querySelector(".search-select fn-input:focus")) {
         close();
       }
     });

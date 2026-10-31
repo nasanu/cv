@@ -1,4 +1,4 @@
-# Builds dist/rex-lambo.zip: everything <rex-lambo> is and needs, so it can be dropped into another site.
+# Builds dist/fn-lambo.zip: everything <fn-lambo> is and needs, so it can be dropped into another site.
 #
 #   lambo.js    the component (src/components/lib/lambo.js, it has no imports)
 #   assets      every image or media file lambo.js refers to as "./name.ext" (the car, the avatar and the media in the
@@ -13,8 +13,8 @@ $root = Split-Path $PSScriptRoot -Parent
 $dist = Join-Path $root "dist"
 $template = Join-Path $PSScriptRoot "lambo-bundle"
 $jsPath = Join-Path $root "src/components/lib/lambo.js"
-$zipPath = Join-Path $dist "rex-lambo.zip"
-$folder = "rex-lambo"
+$zipPath = Join-Path $dist "fn-lambo.zip"
+$folder = "fn-lambo"
 
 if (-not (Test-Path $dist)) { throw "dist/ not found: run the build first" }
 
@@ -62,4 +62,4 @@ finally {
 }
 
 $kb = [math]::Round((Get-Item $zipPath).Length / 1KB)
-Write-Output "rex-lambo bundle written to dist/rex-lambo.zip ($kb KB, $($assets.Count) assets)"
+Write-Output "fn-lambo bundle written to dist/fn-lambo.zip ($kb KB, $($assets.Count) assets)"

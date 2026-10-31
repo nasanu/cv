@@ -60,7 +60,7 @@ class FormInput extends HTMLElement {
       margin-top:.25rem;
     }
       input {
-          font-family: var(--rex-font);
+          font-family: var(--fn-font);
           font-size: 1rem;
           line-height: 100%;
           padding: 0rem 1rem;
@@ -87,7 +87,7 @@ class FormInput extends HTMLElement {
         .form-input.error input, .form-input.error:hover input{
       
             border: 2px solid var(--error);
-            //alt rex style
+            //alt fn style
             // background-image: url("./danger.svg");
             // background-size:1.125rem;
             // background-repeat:no-repeat;
@@ -228,4 +228,4 @@ class FormInput extends HTMLElement {
     }
   }
 }
-customElements.define("rex-input", FormInput);
+customElements.define("fn-input", FormInput);

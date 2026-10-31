@@ -1,8 +1,8 @@
-# ReX Web Components
+# Fn Web Components
 
-Built using [Astro](https://astro.build/) featuring [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) styled to match [Rex Guidelines](https://rex.rakuten.design/en/design/)
+Built using [Astro](https://astro.build/) featuring [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components).
 
-This is the repo for ReX Web Components, [you can view the demo here](https://pages.ghe.rakuten-it.com/ssed/rex-web-components/).
+This is the repo for Fn Web Components, [you can view the demo here](https://github.com/nasanu/cv).
 
 ## Install & run
 
@@ -13,22 +13,16 @@ npm run start
 
 Running this repo will give you the full example site/app with the full components library. To use the library of components outside of this demo app:
 
-## Install via package manager
-
-```npm
-npm install rex-components
-```
-
 ## Import in JS
 
 ```js
- import {rex-input} from TBA;
+import "idk where you saved it/fn-component.js";
 ```
 
 ## Usage in HTML
 
 ```html
-<rex-input type="text" name="fName" placeholder="input stuff"></rex-input>;
+<fn-input type="text" name="fName" placeholder="input stuff"></fn-input>;
 ```
 
 More detailed instructions are found on the example page of each component. Specific Astro information is found below:

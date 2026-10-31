@@ -65,4 +65,4 @@ class Carousel extends HTMLElement {
     });
   }
 }
-customElements.define("rex-carousel", Carousel);
+customElements.define("fn-carousel", Carousel);

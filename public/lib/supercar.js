@@ -1229,7 +1229,7 @@ const inView = (x, y, h, reach = 0) => {
     Math.abs(x - y) < 620 + reach
   );
 };
-class RexSupercar extends HTMLElement {
+class FnSupercar extends HTMLElement {
   static observedAttributes = ["speed", "color", "paused"];
 
   constructor() {
@@ -1984,4 +1984,4 @@ class RexSupercar extends HTMLElement {
   }
 }
 
-customElements.define("rex-supercar", RexSupercar);
+customElements.define("fn-supercar", FnSupercar);
