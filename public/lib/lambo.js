@@ -27,6 +27,7 @@ class RexLambo extends HTMLElement {
   static musicVolume = 0.6;
   static musicAmplitude = 10 ** ((10 * Math.log2(RexLambo.musicVolume)) / 20);
   static defaultSpeed = 0.2; // seconds per wheel revolution
+  static beatStretch = 0.11; // how much longer (and lower) the car is on a full beat in vibe mode, as a share of its size
   static attractSpeed = 1; // how fast the car cruises in vibe mode, as a share of full speed (and then doubled, like TURBO)
   static label = "Interactive scene of a Lamborghini Countach. Press Enter, Space or the left arrow to drive to the next billboard, and the right arrow to go back.";
   // The barrier is built from this many pieces end to end, each barrierBlocks road blocks long (see .barrier), shifted by --off so
@@ -784,6 +785,14 @@ class RexLambo extends HTMLElement {
       audio.volume = 1;
       source.connect(analyser);
       source.connect(gain).connect(ctx.destination);
+      // a second, quick analyser for the beat the car moves to: the equaliser's is smoothed too much to catch it
+      const beat = ctx.createAnalyser();
+      beat.fftSize = 1024;
+      beat.smoothingTimeConstant = 0.2;
+      beat.minDecibels = -90;
+      beat.maxDecibels = -20;
+      source.connect(beat);
+      this.beatAnalyser = beat;
       this.audioCtx = ctx;
       this.analyser = analyser;
       this.musicGain = gain;
@@ -1018,6 +1027,9 @@ class RexLambo extends HTMLElement {
     this.attracting = false;
     cancelAnimationFrame(this.attractFrame);
     this.attractFrame = 0;
+    // the car's beat (see beatCar) only runs with the cruise
+    this.beat = 0;
+    this.shadowRoot.querySelector(".car")?.style.removeProperty("transform");
   }
 
   attractTick(now) {
@@ -1052,7 +1064,53 @@ class RexLambo extends HTMLElement {
     this.cityBlocks = (this.cityBlocks + blocks * this.boost) % RexLambo.cityPeriod;
     this.setRate(this.speedNow * this.boost);
     this.drawCity();
+    this.beatCar(dt);
     this.attractFrame = requestAnimationFrame((t) => this.attractTick(t));
+  }
+
+  /**
+   * Vibe mode: the car stretches out long and low on each beat and springs back between them. The beat is the bass
+   * (40 to 150 Hz), measured against its own recent range (like the equaliser's columns), so every beat that stands
+   * out from the music around it moves the car, however loud the track is.
+   */
+  beatCar(dt) {
+    const an = this.beatAnalyser;
+    let target = 0;
+    if (this.vibe && an && this.audio && !this.audio.paused) {
+      const d = (this.beatData ??= new Uint8Array(an.frequencyBinCount));
+      an.getByteFrequencyData(d);
+      const hz = this.audioCtx.sampleRate / an.fftSize;
+      const band = (lo, hi) => {
+        const i0 = Math.max(1, Math.floor(lo / hz));
+        const i1 = Math.max(i0 + 1, Math.ceil(hi / hz));
+        let sum = 0;
+        for (let i = i0; i < i1; i++) sum += d[i];
+        return sum / (i1 - i0) / 255;
+      };
+      const v = band(40, 100); // the kick drum and the bass, below most of a speaking voice
+      const mid = band(250, 2000); // where a voice is loudest
+      if (this.beatLo === undefined) this.beatLo = this.beatHi = v;
+      const fast = 1 - Math.exp(-dt * 20);
+      const slow = 1 - Math.exp(-dt * 0.15);
+      this.beatLo += (v - this.beatLo) * (v < this.beatLo ? fast : slow);
+      this.beatHi += (v - this.beatHi) * (v > this.beatHi ? fast : slow);
+      target = Math.min(1, Math.max(0, (v - this.beatLo) / Math.max(this.beatHi - this.beatLo, 0.2))) ** 2;
+      // Only a beat when the bass is strong in itself and well above the voice range: talking puts some energy in the
+      // bass too, but much more in the mids, so on its own it doesn't move the car
+      const gate = Math.min(1, Math.max(0, (v - 0.45) / 0.15)) * Math.min(1, Math.max(0, (v - mid - 0.08) / 0.12));
+      target *= gate;
+    }
+    const b = this.beat || 0;
+    // onto a beat quickly (but not in a single frame), and back out more slowly
+    this.beat = b + (target - b) * (1 - Math.exp(-dt * (target > b ? 30 : 8)));
+    const el = (this.carEl ??= this.shadowRoot.querySelector(".car"));
+    if (this.beat < 0.002 && !this.vibe) {
+      this.beat = 0;
+      el.style.transform = "";
+      return;
+    }
+    const k = RexLambo.beatStretch * this.beat;
+    el.style.transform = `scale(${1 + k}, ${1 - k})`;
   }
 
   /** Puts the billboards where they are when the car has stopped at the newest one, with no drive in between (reduced motion). */
@@ -2307,6 +2365,9 @@ class RexLambo extends HTMLElement {
           aspect-ratio: 1408 / 768;
           container-type: inline-size;
         }
+        /* the car with its wheels and shadow, which stretches and squashes to the beat in vibe mode (see beatCar), standing on
+           the road where its tyres touch it. (A box of its own, so the .scene's own size, which the skyline is lined up by, never changes.) */
+        .car { position: absolute; inset: 0; transform-origin: 70% 88%; will-change: transform; }
         /*
          * ambient occlusion under the car: the ground right beneath a car gets very little light, so it is darkest
          * under the body and in a tight contact patch under each tyre, and fades out softly over the road around it.
@@ -3104,9 +3165,9 @@ class RexLambo extends HTMLElement {
       </style>
       <div class="stage intro"><div class="sky" aria-hidden="true"><canvas class="stars"></canvas></div><div class="moon" aria-hidden="true"></div><canvas class="skyline" aria-hidden="true"></canvas><div class="status sr" role="status" aria-live="polite"></div><div class="view"><div class="scene" aria-hidden="true">
         <div class="road"><div class="ground">${roadTiles}</div><div class="world">${barrier}</div></div>
-        <div class="ao"><i class="long"></i><i class="body"></i><i class="fw"></i><i class="rw"></i></div>
+        <div class="car"><div class="ao"><i class="long"></i><i class="body"></i><i class="fw"></i><i class="rw"></i></div>
         <img src="${src}" alt="Lamborghini Countach" draggable="false" />
-        ${wheels}
+        ${wheels}</div>
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
       <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button></div>
       <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
