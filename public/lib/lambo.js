@@ -10,7 +10,7 @@
  *   avatar - image for the character profile billboard (default "./me.jpg")
  *   paused - freezes the wheels, the road and the billboards
  *   (the car cruises along an empty road on the INSERT COIN screen until Enter, Space, the left arrow or a touch, then drives to a billboard, stops, and goes on at the next press;
- *   the right arrow or a swipe right goes back. It is focusable, and a live region announces each stop)
+ *   the right arrow or a swipe left goes back. It is focusable, and a live region announces each stop)
  */
 class RexLambo extends HTMLElement {
   static observedAttributes = ["src", "speed", "paused"];
@@ -134,7 +134,7 @@ class RexLambo extends HTMLElement {
     });
     this.visibilityObserver.observe(this);
     this.setPrompt("insert coin"); // the first screen; once the car has set off it says "press start" at every stop
-    // Touch and mouse: a tap or click sets the car off for the next billboard; a swipe left does the same; a swipe right
+    // Touch and mouse: a tap or click sets the car off for the next billboard; a swipe right does the same; a swipe left
     // drives round to the previous one. They are told apart when the finger lifts (see onGestureEnd), so the press itself
     // does nothing. Only the main button or a finger counts: not a right click, and not a second finger.
     this.gesture = null;
@@ -165,7 +165,7 @@ class RexLambo extends HTMLElement {
       const swipeable = !(g.panel && g.mouse);
       if (swipeable && Math.abs(dx) >= need && Math.abs(dx) > 1.4 * Math.abs(dy) && dt < 1500) {
         this.swallowClick(); // the drag may end on the thing it began on, which must not count as a click as well
-        if (dx < 0) this.go();
+        if (dx > 0) this.go();
         else this.goPrevious();
       } else if (!g.panel && Math.hypot(dx, dy) < 12 && dt < 800) this.go();
       this.resumeMusic(); // a finger lifting is a gesture that allows sound, which a press is not (see resumeMusic)
@@ -189,7 +189,7 @@ class RexLambo extends HTMLElement {
     this.viewer.addEventListener("close", () =>
       this.viewer.querySelector(".box").replaceChildren(),
     );
-    // Keys: Enter, Space or the left arrow drive on to the next billboard (as a swipe left does) and the right arrow goes back. Letters and the
+    // Keys: Enter, Space or the left arrow drive on to the next billboard (as a swipe right does) and the right arrow goes back. Letters and the
     // like do nothing (a page must not have single key shortcuts that cannot be turned off, WCAG 2.1.4). They work while
     // the component has the focus (it can be tabbed to), and on a full screen one (the fill attribute) from anywhere,
     // since there is nothing else on the page to use the keys. The text panel and the popup keep their keys (for scrolling
@@ -561,7 +561,7 @@ class RexLambo extends HTMLElement {
     this.driveTo((this.here + 1) % RexLambo.tables.length);
   }
 
-  /** A swipe right: drives round to the billboard before this one, straight past any in between (none, if there is no way back). */
+  /** A swipe left: drives round to the billboard before this one, straight past any in between (none, if there is no way back). */
   goPrevious() {
     if (this.here < 0) return; // still at the start line
     this.goTo((this.here - 1 + RexLambo.tables.length) % RexLambo.tables.length);

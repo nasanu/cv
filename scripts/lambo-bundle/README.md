@@ -41,14 +41,14 @@ height 28rem). `--borderRadius` sets the corner radius.
 
 ### Controls
 
-- Keyboard: the component can be tabbed to. Enter, Space or the left arrow drives to the next billboard (like a swipe left) and the right arrow goes back
+- Keyboard: the component can be tabbed to. Enter, Space or the left arrow drives to the next billboard (like a swipe right) and the right arrow goes back
   (not a key held down, and not Ctrl, Cmd, Alt or Shift shortcuts). Letter keys do nothing. The keys work while the component has the focus, and
   on a `fill` one from anywhere on the page, but never while typing in a field or on a button or link. While the text panel has the focus,
   the keys scroll it. A tap or click on the component also starts the car.
 - Accessibility: the component has a name and instructions for screen readers, and announces each stop (`Stopped at ME. Tab to read the details...`).
   With reduced motion set, nothing animates: the car goes straight to the next billboard. The `INSERT COIN` prompt blinks until the first press (not at all with reduced motion).
-- Swipe left (or drag, with a mouse) to drive to the next billboard, and swipe right to drive round to the previous one,
-  straight past the others. A tap or click anywhere on the scene is the same as a swipe left. A press on the text panel
+- Swipe right (or drag, with a mouse) to drive to the next billboard, and swipe left to drive round to the previous one,
+  straight past the others. A tap or click anywhere on the scene is the same as a swipe right. A press on the text panel
   never counts as a tap, but a finger swipe along it still counts.
 - Once the car has set off, a progress strip at the bottom left shows the car on a road from START (right) to a FINISH line (left), with a mini billboard for each
   entry in `tables`. Driving past the last billboard crosses the finish line and the car starts a new lap.
