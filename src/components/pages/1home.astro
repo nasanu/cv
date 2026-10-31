@@ -1,21 +1,17 @@
 ---
-export const title = "Home";
+export const title = 'Home';
 ---
 
 <section>
   <h1>
-    You've somehow found the unofficial FN web components library. Good for
-    you.
+    You've somehow found the unofficial FN web components library. Good for you.
   </h1><br />
   This is all about <a
     href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"
     target="_blank">web components</a
-  > and simplicity. Styling is based on <a
-    href="https://rex.rakuten.design/en/design/components/"
-    target="_blank">Fn Guidelines</a
-  > where possible and extra functionality is kept to a minimum. You are encrouaged
-  download each component individually and customise it to your specific needs as
-  you see fit.<br />
+  > and simplicity. Where possible and extra functionality is kept to a minimum.
+  You are encrouaged download each component individually and customise it to your
+  specific needs as you see fit.<br />
 
   <h3>This means <em>NO NPM INSTALL</em>. Why?</h3>
   When you install a library via NPM what happens? It gets thrown into the node_modules
@@ -33,10 +29,8 @@ export const title = "Home";
   to do what your specific design calls for.
   <br /><br />
 
-  Repo: <a
-    target="_blank"
-    href="https://ghe.rakuten-it.com/ssed/fn-web-components/"
-    >https://ghe.rakuten-it.com/ssed/fn-web-components/</a
+  Repo: <a target="_blank" href="https://github.com/nasanu/cv"
+    >https://github.com/nasanu/cv</a
   >
 </section>
 <br />
@@ -48,15 +42,13 @@ export const title = "Home";
 
     OR 
     
-    //download directly from the repo:
-    https://ghe.rakuten-it.com/ssed/fn-web-components/tree/main/src/components/lib
-
+    Download directly from the repo linked above.
 `}</code></pre>
 
   <h3>② Import</h3>
   <pre><code>{`
 
-    import "idk where you saved it/fn-component.js"
+    import "idk where you saved it/component.js"
     
     `}</code></pre>
 
@@ -88,8 +80,8 @@ export const title = "Home";
       Here the import is actaully running the JS associated with the import. In the
       case with <a href="#Input" target="_blank">fn-input</a> this will cause the
       fn-input.js file to be run. The only important thing here is that this will
-      add the "fn-input" element to the document element making it available in
-      all of your HTML.
+      add the "fn-input" element to the document element making it available in all
+      of your HTML.
 
       <h4>③ Use</h4>
       Use it in HTML. This is a HTML element, just like a normal HTML tag. For example:
@@ -106,9 +98,8 @@ export const title = "Home";
   >, as such getting data out is handled via <a
     href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent"
     target="_blank">Custom Events</a
-  >. In the following example the <a href="#Input" target="_blank"
-    >fn-input
-  </a> component is passed "fName" for its name paramater. For components that generate
+  >. In the following example the <a href="#Input" target="_blank">fn-input </a>
+  component is passed "fName" for its name paramater. For components that generate
   events, the name of the custom event you listen to is the components name paramater
   plus "Event", so in this case you listen to the "fNameEvent". It also needs to
   be noted that in <a
