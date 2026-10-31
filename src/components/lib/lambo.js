@@ -2760,9 +2760,12 @@ class RexLambo extends HTMLElement {
           content: "";
           position: absolute;
           inset: 0;
+          /* the scanlines are a tiny image repeated, which the browser has ready as soon as the sign exists, rather than a
+             gradient over the whole face that was painted only when the sign came into view (at 4K, in plain sight) */
           background:
             linear-gradient(115deg, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0.04) 28%, transparent 40%),
-            repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0 0.3cqw, transparent 0.3cqw 0.9cqw);
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='3' viewBox='0 0 1 3' preserveAspectRatio='none'%3E%3Crect y='1' width='1' height='1' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E") 0 0 / 100% 0.9cqw repeat-y;
+          will-change: transform; /* its own layer, painted up front */
           pointer-events: none;
         }
         /* lamps along the top edge, on short arms, each with a soft glow */
