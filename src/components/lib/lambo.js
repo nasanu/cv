@@ -760,7 +760,10 @@ class RexLambo extends HTMLElement {
     this.boost = 1;
     stage.querySelector(".turbo").setAttribute("aria-checked", false);
     this.hideTable();
-    this.trackEls.stops.forEach((el) => (el.disabled = false));
+    this.trackEls.stops.forEach((el) => {
+      el.disabled = false;
+      el.classList.remove("lit"); // a fresh start: no panels seen yet
+    });
     stage.classList.add("intro");
     this.setPrompt("insert coin");
     this.updateTrack();
@@ -793,6 +796,8 @@ class RexLambo extends HTMLElement {
       RexLambo.mediaHTML(data.media) +
       RexLambo.linksHTML(data.links);
     table.inert = false;
+    // its mini billboard on the strip lights up, and stays lit, once its panel has been shown (not just driven past)
+    this.trackEls?.stops[idx % RexLambo.tables.length]?.classList.add("lit");
     table.setAttribute("aria-label", data.title); // the panel is a region the keyboard can reach (and scroll)
     this.shadowRoot.querySelectorAll(".stop").forEach((el, i) => {
       if (i === idx % RexLambo.tables.length) el.setAttribute("aria-current", "step");
@@ -822,7 +827,6 @@ class RexLambo extends HTMLElement {
     const n = RexLambo.tables.length;
     if (!this.trackEls || !n) return;
     const round = n + 1;
-    const at = (i) => (i + 1) / round;
     const target = this.boards[this.boards.length - 1];
     const j = this.journey;
     let s = 0;
@@ -839,9 +843,6 @@ class RexLambo extends HTMLElement {
     if (key !== this.trackKey) {
       this.trackKey = key;
       this.trackEls.me.style.setProperty("--at", key);
-      this.trackEls.stops.forEach((el, i) =>
-        el.classList.toggle("lit", pos >= at(i) - 1e-6),
-      );
     }
     // a flash on the finish line as the car goes over it
     if (crossing && !this.lapFlashed) {
@@ -3236,7 +3237,7 @@ class RexLambo extends HTMLElement {
         .mark.finish::after { content: "FINISH"; color: #fff3a8; transform: translateX(-30%); }
         .mark.finish.flash { animation: flash 1s ease-out; }
         @keyframes flash { 0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); } 25% { box-shadow: 0 0 1.6em 0.4em #fff3a8; } 100% { box-shadow: 0 0 0.6em rgba(255, 255, 255, 0.4); } }
-        /* a mini billboard: a sign face on two legs, dim until the car has got there, then lit up */
+        /* a mini billboard: a sign face on two legs, dim until its panel has been shown, then lit up for good (see showTable) */
         .stop { bottom: 0.45em; width: 2.2em; height: 2.2em; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; pointer-events: auto; }
         .stage.intro .stop { pointer-events: none; }
         .stop:disabled { cursor: default; }
