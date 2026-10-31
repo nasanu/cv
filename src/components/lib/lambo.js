@@ -2067,12 +2067,44 @@ class RexLambo extends HTMLElement {
   ];
 
   static paint(index, avatarSrc) {
-    const cv = document.createElement("canvas");
-    cv.width = 64;
-    cv.height = 32;
-    const ctx = cv.getContext("2d");
+    const art = document.createElement("canvas");
+    art.width = 64;
+    art.height = 32;
+    const ctx = art.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     RexLambo.arts[index](ctx, avatarSrc);
+    // What is shown is the art blown up 8 times, with the scanlines and the faint glare drawn into the same picture. As a
+    // layer over the sign they were sometimes drawn a moment after the sign came into view (at 4K), and popped in.
+    const cv = document.createElement("canvas");
+    cv.width = 64 * 8;
+    cv.height = 32 * 8;
+    const out = cv.getContext("2d");
+    const compose = () => {
+      const W = cv.width;
+      const H = cv.height;
+      out.setTransform(1, 0, 0, 1, 0, 0);
+      out.imageSmoothingEnabled = false;
+      out.drawImage(art, 0, 0, W, H);
+      // scanlines: a dark line a third of every 6 pixels (0.9cqw on the sign, as they were)
+      out.fillStyle = "rgba(0, 0, 0, 0.2)";
+      for (let y = 0; y < H; y += 6) out.fillRect(0, y, W, 2);
+      // the glare, from the top left at 115 degrees; the canvas is shown mirrored (see .sign canvas), so it is drawn mirrored
+      out.setTransform(-1, 0, 0, 1, W, 0);
+      const a = (115 * Math.PI) / 180;
+      const dx = Math.sin(a);
+      const dy = -Math.cos(a);
+      const len = Math.abs(W * dx) + Math.abs(H * dy);
+      const g = out.createLinearGradient(W / 2 - (dx * len) / 2, H / 2 - (dy * len) / 2, W / 2 + (dx * len) / 2, H / 2 + (dy * len) / 2);
+      g.addColorStop(0, "rgba(255, 255, 255, 0.14)");
+      g.addColorStop(0.28, "rgba(255, 255, 255, 0.04)");
+      g.addColorStop(0.4, "rgba(255, 255, 255, 0)");
+      out.fillStyle = g;
+      out.fillRect(0, 0, W, H);
+    };
+    compose();
+    // the photo billboard draws its photo when it has loaded (after the art's own listener, so this comes second)
+    const img = RexLambo._avatars?.get(avatarSrc);
+    if (img && !(img.complete && img.naturalWidth)) img.addEventListener("load", compose, { once: true });
     return cv;
   }
 
@@ -2931,19 +2963,6 @@ class RexLambo extends HTMLElement {
           box-shadow: 0 0 0 0.45cqw #5b5b72, 0 0 4cqw rgba(0, 170, 220, 0.45);
         }
         .sign canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; transform: scaleX(-1); }
-        /* scanlines and a faint glare across the face, over the canvas */
-        .sign::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          /* the scanlines are a tiny image repeated, which the browser has ready as soon as the sign exists, rather than a
-             gradient over the whole face that was painted only when the sign came into view (at 4K, in plain sight) */
-          background:
-            linear-gradient(115deg, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0.04) 28%, transparent 40%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='3' viewBox='0 0 1 3' preserveAspectRatio='none'%3E%3Crect y='1' width='1' height='1' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E") 0 0 / 100% 0.9cqw repeat-y;
-          will-change: transform; /* its own layer, painted up front */
-          pointer-events: none;
-        }
         /* lamps along the top edge, on short arms, each with a soft glow */
         .lamps {
           position: absolute;
