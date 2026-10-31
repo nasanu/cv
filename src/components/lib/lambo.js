@@ -22,7 +22,7 @@ class RexLambo extends HTMLElement {
   // than its number (0.3 is only about 10 dB down, and these tracks are mastered loud), so it is turned into amplitude the
   // way hearing works: twice as loud is 10 dB more, so 30% loudness is about 17 dB down (amplitude 0.135) and 60% about
   // 7 dB down (amplitude 0.43).
-  static musicSkip = 1; // seconds skipped at the start of every track, which begins with silence
+  static musicDelay = 1; // seconds of quiet before a track starts
   static musicVolume = 0.6;
   static musicAmplitude = 10 ** ((10 * Math.log2(RexLambo.musicVolume)) / 20);
   static defaultSpeed = 0.2; // seconds per wheel revolution
@@ -64,7 +64,6 @@ class RexLambo extends HTMLElement {
     this.speedNow = 0; // 0 = parked, 1 = full speed
     this.boards = [];
     this.cityBlocks = 0;
-    this.cityBlocksEq = 0; // how far the skyline has gone at normal speed, ignoring TURBO: the equaliser's columns follow this (see drawCity)
     this.billboardCount = 0;
     this.audio = null; // the soundtrack's player, made on the first drive
     this.audioCtx = null;
@@ -116,8 +115,8 @@ class RexLambo extends HTMLElement {
     sound.addEventListener("click", () => {
       this.musicOn = !this.musicOn;
       sound.setAttribute("aria-checked", this.musicOn);
-      if (!this.musicOn) this.audio?.pause();
-      else if (this.audio) this.audio.play().catch(() => {});
+      if (!this.musicOn) this.pauseMusic();
+      else if (this.audio) this.playMusic();
       else this.startMusic();
       if (!this.driving) this.drawCity(); // show or hide the random lights at once
     });
@@ -227,7 +226,7 @@ class RexLambo extends HTMLElement {
   disconnectedCallback() {
     cancelAnimationFrame(this.frame);
     this.stopAttract();
-    this.audio?.pause();
+    this.pauseMusic();
     cancelAnimationFrame(this.starFrame);
     this.starFrame = 0;
     cancelAnimationFrame(this.eqFrame);
@@ -284,8 +283,36 @@ class RexLambo extends HTMLElement {
 
   /** Plays the soundtrack again if the browser refused it (see onGestureEnd), unless it has been switched off. */
   resumeMusic() {
+    if (this.audio?.paused) this.playMusic();
+  }
+
+  /**
+   * Plays the soundtrack, or carries on with it. A track played from its start waits `musicDelay` first; it is played
+   * (muted) and stopped at once now, because this may be a press, and a browser that only lets sound start on a press
+   * (Safari) then lets this player start on its own a second later.
+   */
+  playMusic() {
     const a = this.audio;
-    if (a && this.musicOn && a.paused) a.play().catch(() => {});
+    if (!a || !this.musicOn || this.musicTimer) return; // (already waiting to start)
+    if (a.currentTime > 0) {
+      a.play().catch(() => {});
+      return;
+    }
+    a.muted = true;
+    a.play().catch(() => {});
+    a.pause();
+    a.muted = false;
+    this.musicTimer = setTimeout(() => {
+      this.musicTimer = 0;
+      if (this.musicOn) a.play().catch(() => {}); // blocked or missing: the scene just stays quiet
+    }, RexLambo.musicDelay * 1000);
+  }
+
+  /** Stops the soundtrack, including one still waiting to start. */
+  pauseMusic() {
+    clearTimeout(this.musicTimer);
+    this.musicTimer = 0;
+    this.audio?.pause();
   }
 
   /* ---------- driving: park at a billboard, wait for a key or touch, drive to the next ---------- */
@@ -508,7 +535,7 @@ class RexLambo extends HTMLElement {
       this.restartIntro();
       this.musicOn = true;
       sound.setAttribute("aria-checked", true);
-      if (this.audio) this.audio.play().catch(() => {});
+      if (this.audio) this.playMusic();
       else this.startMusic();
       this.announce("Vibe mode on. Press to leave it.");
     } else {
@@ -518,7 +545,7 @@ class RexLambo extends HTMLElement {
       sound.setAttribute("aria-checked", this.musicOn);
       if (!keepMusic) {
         // the switch itself: back to the silent INSERT COIN screen, with the car stopped
-        this.audio?.pause(); // the car eases to a stop in attractTick
+        this.pauseMusic(); // the car eases to a stop in attractTick
       }
       this.announce("Vibe mode off.");
     }
@@ -666,7 +693,7 @@ class RexLambo extends HTMLElement {
       const source = ctx.createMediaElementSource(audio);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.72;
+      analyser.smoothingTimeConstant = 0.8;
       analyser.minDecibels = -88;
       analyser.maxDecibels = -28;
       const gain = ctx.createGain();
@@ -694,8 +721,34 @@ class RexLambo extends HTMLElement {
   startEq() {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const BARS = RexLambo.eqBars;
-    const level = (this.eqLevel = new Float32Array(BARS));
-    const peak = (this.eqPeak = new Float32Array(BARS));
+    const level = new Float32Array(BARS);
+    const peak = new Float32Array(BARS);
+    // what is drawn: each column's level and peak (as a share of the building's body) snapped to steps, and only moved to
+    // another step once the real value is well past it, so a light on the edge between two steps can't flicker on and off
+    const shown = (this.eqLevel = new Float32Array(BARS));
+    const shownPeak = (this.eqPeak = new Float32Array(BARS));
+    // the last two raw targets of each column: a target is the median of its last three, so one glitched reading from the
+    // analyser (a stalled or all-zero frame when the machine is busy, or a lone spike) can't make a column jump
+    const prev1 = new Float32Array(BARS);
+    const prev2 = new Float32Array(BARS);
+    // when each column's shown level and peak last went up: a light that has come on stays on for at least eqMinOn
+    const rose = new Float64Array(BARS);
+    const peakRose = new Float64Array(BARS);
+    const snap = (cur, v, when, b, now) => {
+      const x = v < 0.005 ? 0 : v * RexLambo.eqSteps;
+      if (Math.abs(x - cur * RexLambo.eqSteps) <= RexLambo.eqHold && x > 0) return cur;
+      const to = Math.round(x) / RexLambo.eqSteps;
+      if (to > cur) when[b] = now;
+      else if (now - when[b] < RexLambo.eqMinOn * 1000) return cur; // not down yet: the lights it would put out have only just come on
+      return to;
+    };
+    // Each column's own range, so the lights use the whole height of the buildings whatever the music is like: the
+    // quietest (lo) and loudest (hi) it has been lately, each following the column quickly outwards and slowly back
+    // (over some 15 seconds), and the level is where the column is between them. (A fixed scale left loud, mastered
+    // tracks always near the top.)
+    const lo = new Float32Array(BARS);
+    const hi = new Float32Array(BARS);
+    let ranged = false;
     this.eqActive = false;
     let data = null;
     let bins = null; // each column's range of the analyser's frequency bins
@@ -733,14 +786,23 @@ class RexLambo extends HTMLElement {
           const i1 = Math.max(i0 + 1, Math.ceil(bins[b + 1]));
           let sum = 0;
           for (let i = i0; i < i1; i++) sum += data[i];
-          // music has far more low notes than high, so lift the right hand columns to even the picture out
-          target = Math.min(1, Math.max(0, (sum / (i1 - i0) / 255 - 0.12) * 1.2 + 0.32 * (b / BARS)));
-          if (sum === 0) target = 0;
+          const v = sum / (i1 - i0) / 255;
+          if (!ranged) lo[b] = hi[b] = v;
+          lo[b] += (v - lo[b]) * (v < lo[b] ? 0.2 : 0.002);
+          hi[b] += (v - hi[b]) * (v > hi[b] ? 0.2 : 0.002);
+          target = sum === 0 ? 0 : Math.min(1, Math.max(0, (v - lo[b]) / Math.max(hi[b] - lo[b], 0.08)));
         }
-        level[b] += (target - level[b]) * (target > level[b] ? 0.55 : 0.14); // up quickly, down slowly
+        const raw = target;
+        target = Math.max(Math.min(raw, prev1[b]), Math.min(Math.max(raw, prev1[b]), prev2[b])); // the median of the three
+        prev2[b] = prev1[b];
+        prev1[b] = raw;
+        level[b] += (target - level[b]) * (target > level[b] ? RexLambo.eqRise : RexLambo.eqFall); // up quicker than down, but never in one jump
         peak[b] = Math.max(level[b], peak[b] - 0.02);
         if (level[b] > 0.005 || peak[b] > 0.005) moving = true;
+        shown[b] = snap(shown[b], level[b], rose, b, now);
+        shownPeak[b] = Math.max(shown[b], snap(shownPeak[b], peak[b], peakRose, b, now));
       }
+      if (live) ranged = true;
       this.eqActive = live || moving; // while true the windows are lit to show the music
       // While driving, every frame redraws the skyline anyway. Parked, redraw only if a column has moved far enough to
       // light or darken a window (in silence, or when the music has paused, nothing has).
@@ -748,7 +810,7 @@ class RexLambo extends HTMLElement {
       else {
         let sig = this.eqActive ? 1 : 0;
         for (let b = 0; b < BARS; b++)
-          sig = (sig * 31 + Math.round(level[b] * 64) + Math.round(peak[b] * 64) * 7) | 0;
+          sig = (sig * 31 + Math.round(shown[b] * 64) + Math.round(shownPeak[b] * 64) * 7) | 0;
         if (sig !== lastSig) {
           lastSig = sig;
           this.drawCity();
@@ -786,15 +848,14 @@ class RexLambo extends HTMLElement {
     };
     const audio = new Audio(next());
     audio.volume = RexLambo.musicAmplitude;
-    audio.addEventListener("loadedmetadata", () => (audio.currentTime = RexLambo.musicSkip)); // each time a track is loaded
     audio.addEventListener("ended", () => {
       audio.src = next();
-      audio.play().catch(() => {});
+      this.playMusic(); // after the same short wait as the first
     });
     this.audio = audio;
     this.hookAnalyser(audio);
     audio.addEventListener("play", () => this.resumeEq());
-    audio.play().catch(() => {}); // blocked or missing: the scene just stays quiet
+    this.playMusic();
   }
 
   /**
@@ -904,7 +965,6 @@ class RexLambo extends HTMLElement {
     }
     const blocks = (this.speedNow * dt) / (this.speedValue * RexLambo.roadPerSpin);
     this.cityBlocks = (this.cityBlocks + blocks * this.boost) % RexLambo.cityPeriod;
-    this.cityBlocksEq = (this.cityBlocksEq + blocks) % RexLambo.cityPeriod; // the equaliser ignores TURBO, as when driving
     this.setRate(this.speedNow * this.boost);
     this.drawCity();
     this.attractFrame = requestAnimationFrame((t) => this.attractTick(t));
@@ -920,7 +980,6 @@ class RexLambo extends HTMLElement {
     }
     this.boards = this.boards.filter((b) => (b.p < 1 ? true : (b.el.remove(), false)));
     this.cityBlocks = (this.cityBlocks + by * RexLambo.trip) % RexLambo.cityPeriod;
-    this.cityBlocksEq = (this.cityBlocksEq + by * RexLambo.trip) % RexLambo.cityPeriod;
     this.speedNow = 0;
     this.setRate(0);
     this.drawCity();
@@ -988,8 +1047,6 @@ class RexLambo extends HTMLElement {
     // the cityscape is part of the ground, so it scrolls at road speed too, wrapping once per pattern repeat
     this.cityBlocks =
       (this.cityBlocks + step * RexLambo.trip) % RexLambo.cityPeriod;
-    this.cityBlocksEq =
-      (this.cityBlocksEq + (step * RexLambo.trip) / this.boost) % RexLambo.cityPeriod;
     if (draw) {
       this.drawCity();
       this.updateTrack();
@@ -1162,6 +1219,11 @@ class RexLambo extends HTMLElement {
   // the equaliser on the building lights: 40 columns of spectrum across the screen, and its colours (cyan low, through
   // violet, to hot pink high)
   static eqBars = 40;
+  static eqSteps = 30; // the levels drawn are whole steps of 1/eqSteps of a building's height
+  static eqHold = 0.8; // a level moves to another step only when the real one is this many steps past it (over half, so it can't flicker)
+  static eqMinOn = 0.15; // seconds: once lit, an equaliser light stays on at least this long, so none flickers
+  static eqRise = 0.2; // how much of the way to a higher level a column goes in each step (30 a second): lower is smoother
+  static eqFall = 0.1; // and to a lower one
   static eqCell = 2; // the equaliser's lights are this many times the smallest size they used to be (a cell of 6 units, a light of 4)
   static eqBelow = 110; // how far below the ground, in world units, the lights go on down a building's body (to the barrier)
   static eqColors = ["0,229,255", "60,190,255", "130,130,255", "190,80,255", "240,60,200", "255,46,147"].map((c) => `rgba(${c},0.9)`);
@@ -1597,17 +1659,19 @@ class RexLambo extends HTMLElement {
       ctx.stroke();
 
       if (this.eqActive) {
-        // the music: this building's windows light up to the height of the spectrum column it is in front of
-        // The column a building is in front of follows where it would be at normal speed (cityBlocksEq), not where it is, so
-        // with TURBO on the buildings still pass the columns at the same pace and the equaliser does not speed up with the car.
-        let cx = (minX + maxX) / 2;
-        if (proj(b.x + b.w / 2, road * (-20 - this.cityBlocksEq + b.by) + b.d / 2, 0, P0)) cx = S[P0];
-        const band = Math.min(RexLambo.eqBars - 1, Math.max(0, Math.floor((cx / W) * RexLambo.eqBars)));
-        // as a share of the building's whole visible body, so a full column lights it from foot to roof (the levels are
-        // eased up a little, so ordinary ones climb well up the building rather than staying down by its foot)
+        // the music: this building's windows light up to the height of the spectrum where it is on the screen. That is
+        // read between the two nearest columns by where the building's middle is, so a building passing from one column to
+        // the next changes smoothly rather than jumping to its neighbour's level. (It used to follow where the building
+        // would be at normal speed, so TURBO didn't speed the equaliser up, but in vibe mode, always at TURBO, that drifted
+        // ever further from where the buildings are and buildings flashed between unrelated columns.)
+        const at = Math.min(RexLambo.eqBars - 1, Math.max(0, ((minX + maxX) / 2 / W) * RexLambo.eqBars - 0.5));
+        const band = Math.floor(at);
+        const next = Math.min(band + 1, RexLambo.eqBars - 1);
+        const t = at - band;
+        // as a share of the building's whole visible body, so a full column lights it from foot to roof
         const T = h + RexLambo.eqBelow;
-        const lvl = this.eqLevel[band] ** 0.6 * T;
-        const pk = this.eqPeak[band] ** 0.6 * T;
+        const lvl = (this.eqLevel[band] * (1 - t) + this.eqLevel[next] * t) * T;
+        const pk = (this.eqPeak[band] * (1 - t) + this.eqPeak[next] * t) * T;
         const m = RexLambo.eqCell; // every building's lights are the same size
         eqLights(false, x1, y0, b.d, h, lvl, pk, m);
         eqLights(true, y1, x0, b.w, h, lvl, pk, m);
