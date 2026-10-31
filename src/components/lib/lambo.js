@@ -22,10 +22,11 @@ class RexLambo extends HTMLElement {
   // than its number (0.3 is only about 10 dB down, and these tracks are mastered loud), so it is turned into amplitude the
   // way hearing works: twice as loud is 10 dB more, so 30% loudness is about 17 dB down (amplitude 0.135) and 60% about
   // 7 dB down (amplitude 0.43).
+  static musicSkip = 1; // seconds skipped at the start of every track, which begins with silence
   static musicVolume = 0.6;
   static musicAmplitude = 10 ** ((10 * Math.log2(RexLambo.musicVolume)) / 20);
   static defaultSpeed = 0.2; // seconds per wheel revolution
-  static attractSpeed = 0.7; // how fast the car cruises on the INSERT COIN screen, as a share of full speed
+  static attractSpeed = 1; // how fast the car cruises in vibe mode, as a share of full speed (and then doubled, like TURBO)
   static label = "Interactive scene of a Lamborghini Countach. Press Enter, Space or the left arrow to drive to the next billboard, and the right arrow to go back.";
   // The barrier is built from this many pieces end to end, each barrierBlocks road blocks long (see .barrier), shifted by --off so
   // that the barrier's own 48cqw patterns join up seamlessly. As one 44 block strip it was wider than the largest
@@ -520,6 +521,7 @@ class RexLambo extends HTMLElement {
         this.audio?.pause();
         this.stopAttract();
         this.speedNow = 0;
+        this.boost = 1;
         this.setRate(0);
       }
       this.announce("Vibe mode off.");
@@ -746,7 +748,7 @@ class RexLambo extends HTMLElement {
       this.eqActive = live || moving; // while true the windows are lit to show the music
       // While driving, every frame redraws the skyline anyway. Parked, redraw only if a column has moved far enough to
       // light or darken a window (in silence, or when the music has paused, nothing has).
-      if (this.driving) lastSig = -1;
+      if (this.driving || this.attracting) lastSig = -1; // (the vibe mode cruise redraws every frame too)
       else {
         let sig = this.eqActive ? 1 : 0;
         for (let b = 0; b < BARS; b++)
@@ -788,6 +790,7 @@ class RexLambo extends HTMLElement {
     };
     const audio = new Audio(next());
     audio.volume = RexLambo.musicAmplitude;
+    audio.addEventListener("loadedmetadata", () => (audio.currentTime = RexLambo.musicSkip)); // each time a track is loaded
     audio.addEventListener("ended", () => {
       audio.src = next();
       audio.play().catch(() => {});
@@ -888,10 +891,11 @@ class RexLambo extends HTMLElement {
     this.last = now;
     if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
     this.speedNow = Math.min(RexLambo.attractSpeed, this.speedNow + dt * 0.5); // eases up to its cruising speed
+    this.boost += (2 - this.boost) * Math.min(1, dt * 4); // vibe mode cruises at TURBO speed, which a press then eases back from
     const blocks = (this.speedNow * dt) / (this.speedValue * RexLambo.roadPerSpin);
-    this.cityBlocks = (this.cityBlocks + blocks) % RexLambo.cityPeriod;
-    this.cityBlocksEq = (this.cityBlocksEq + blocks) % RexLambo.cityPeriod;
-    this.setRate(this.speedNow);
+    this.cityBlocks = (this.cityBlocks + blocks * this.boost) % RexLambo.cityPeriod;
+    this.cityBlocksEq = (this.cityBlocksEq + blocks) % RexLambo.cityPeriod; // the equaliser ignores TURBO, as when driving
+    this.setRate(this.speedNow * this.boost);
     this.drawCity();
     this.attractFrame = requestAnimationFrame((t) => this.attractTick(t));
   }
@@ -1148,6 +1152,7 @@ class RexLambo extends HTMLElement {
   // the equaliser on the building lights: 40 columns of spectrum across the screen, and its colours (cyan low, through
   // violet, to hot pink high)
   static eqBars = 40;
+  static eqCell = 2; // the equaliser's lights are this many times the smallest size they used to be (a cell of 6 units, a light of 4)
   static eqBelow = 110; // how far below the ground, in world units, the lights go on down a building's body (to the barrier)
   static eqColors = ["0,229,255", "60,190,255", "130,130,255", "190,80,255", "240,60,200", "255,46,147"].map((c) => `rgba(${c},0.9)`);
   // the road's tilt as in the CSS (rotateZ(42deg) then rotateX(70deg)), as cosines and sines for drawCity
@@ -1324,7 +1329,9 @@ class RexLambo extends HTMLElement {
     this.nextFlip = 0;
     this.cityScratch = new Float64Array(36); // projected points, reused every frame (see drawCity)
     const size = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // The skyline is redrawn every frame, so its canvas is held to about 2560 pixels wide: at 4K a full size one was too much to
+      // redraw in time and the equaliser lagged.
+      const dpr = Math.min(window.devicePixelRatio || 1, 2, 2560 / Math.max(1, canvas.clientWidth));
       canvas.width = Math.max(1, Math.round(canvas.clientWidth * dpr));
       canvas.height = Math.max(1, Math.round(canvas.clientHeight * dpr));
       const stage = this.shadowRoot
@@ -1470,10 +1477,10 @@ class RexLambo extends HTMLElement {
     // The windows of one face of a building as equaliser lights. A building's body, as seen, runs from its roof (h) down
     // past the ground to the barrier in front, since the ground between them isn't drawn and the walls go on down below it,
     // so the equaliser uses that whole length: T = h + EQ_BELOW units, with the windows laid out in a grid
-    // (cells of 6 units with a window 2 smaller in each, rows counted down from the roof). Every window from the foot of
+    // (cells of 6 x eqCell units with a window 2 smaller in each, rows counted down from the roof). Every window from the foot of
     // the body up to `lvl` (measured from the foot, 0 to T) is lit, one path and one fill for each colour band up the
-    // body, and the window at `pk` is a pale cap. `m` makes the cells m times bigger (windows of m x m cells joined up):
-    // the far buildings are small on the screen, so they get fewer, bigger windows, which keeps the drawing quick.
+    // body, and the window at `pk` is a pale cap. `m` makes the cells m times bigger (windows of m x m cells joined up); every building uses the same m (eqCell),
+    // so the lights are one size in the world and look smaller on the far buildings only through the perspective.
     const eqLights = (alongX, fixed, start, span, h, lvl, pk, m) => {
       const cs = 6 * m;
       const ws = cs - 2;
@@ -1588,7 +1595,7 @@ class RexLambo extends HTMLElement {
         const T = h + RexLambo.eqBelow;
         const lvl = this.eqLevel[band] ** 0.6 * T;
         const pk = this.eqPeak[band] ** 0.6 * T;
-        const m = b.f > 0.3 ? 1 : b.f > 0.15 ? 2 : 3; // bigger windows (fewer) on the far, small buildings
+        const m = RexLambo.eqCell; // every building's lights are the same size
         eqLights(false, x1, y0, b.d, h, lvl, pk, m);
         eqLights(true, y1, x0, b.w, h, lvl, pk, m);
       } else if (!this.musicOn) {
