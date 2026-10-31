@@ -206,9 +206,17 @@ class RexLambo extends HTMLElement {
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.repeat || e.isComposing) return;
       const next = e.key === "Enter" || e.key === " " || e.key === "ArrowLeft";
       const previous = e.key === "ArrowRight";
-      if (!next && !previous) return;
+      const back = e.key === "Escape"; // back to the initial screen (see goInitial)
+      if (!next && !previous && !back) return;
       if (this.viewer?.open) return; // keys belong to the popup (Escape closes it) while it is showing
       const path = e.composedPath();
+      if (back) {
+        if (!path.includes(this) && !this.hasAttribute("fill")) return;
+        if (this.shadowRoot.querySelector(".stage").classList.contains("intro")) return;
+        e.preventDefault();
+        this.goInitial();
+        return;
+      }
       if (!path.includes(this) && !this.hasAttribute("fill")) return;
       if (path.some((el) => el.classList?.contains("table"))) return; // the panel scrolls with the keys
       const target = path[0];
@@ -222,6 +230,14 @@ class RexLambo extends HTMLElement {
       else this.goPrevious();
     };
     window.addEventListener("keydown", this.onKey);
+    // The back button (on a phone, or the browser's) goes back to the initial screen from start mode: setting off from the
+    // initial screen adds a step to the page's history (see enterStart), and going back from it lands here.
+    this.onPop = () => {
+      if (!this.historyStep) return;
+      this.historyStep = false;
+      this.goInitial(true);
+    };
+    window.addEventListener("popstate", this.onPop);
     this.startAttract();
   }
 
@@ -242,6 +258,7 @@ class RexLambo extends HTMLElement {
     this.endGesture?.();
     this.frame = 0;
     window.removeEventListener("keydown", this.onKey);
+    window.removeEventListener("popstate", this.onPop);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -604,6 +621,11 @@ class RexLambo extends HTMLElement {
     stage.querySelector(".vibe").setAttribute("aria-checked", on);
     if (on) {
       this.vibeBefore = { musicOn: this.musicOn, playing: !!this.audio && !this.audio.paused };
+      if (this.historyStep) {
+        // out of start mode, so the back button has nothing to come back from (see enterStart)
+        this.historyStep = false;
+        history.back();
+      }
       this.restartIntro();
       this.musicOn = true;
       sound.setAttribute("aria-checked", true);
@@ -621,6 +643,29 @@ class RexLambo extends HTMLElement {
       this.announce("Vibe mode off.");
     }
     if (!this.driving) this.drawCity(); // the lights follow the music (or the random flicker) at once
+  }
+
+  /** Leaving the initial screen for start mode: a step in the page's history, so the back button comes back (see onPop). */
+  enterStart() {
+    if (this.historyStep) return;
+    history.pushState(history.state, "");
+    this.historyStep = true;
+  }
+
+  /**
+   * Escape or the back button in start mode: back to the initial screen, silent, with the car easing to a stop. `popped`
+   * is true when the back button did it (so its history step has gone already); otherwise the step is taken back off.
+   */
+  goInitial(popped = false) {
+    if (!popped && this.historyStep) {
+      this.historyStep = false;
+      history.back(); // (the popstate this fires finds no step and does nothing)
+    }
+    if (this.vibe || this.shadowRoot.querySelector(".stage").classList.contains("intro")) return;
+    if (this.viewer?.open) this.viewer.close();
+    this.pauseMusic();
+    this.restartIntro();
+    this.announce("Back to the start. Press Enter, Space or the left arrow to start, or tap the scene.");
   }
 
   /** Back to the INSERT COIN screen: the billboards gone, the car at the start line cruising along the empty road, the panel hidden. */
@@ -976,7 +1021,8 @@ class RexLambo extends HTMLElement {
     this.driving = true;
     this.stopAttract(); // the car keeps the speed it has (speedNow) and the road its place (cityBlocks)
     this.trackEls?.stops.forEach((el) => (el.disabled = true));
-    this.shadowRoot.querySelector(".stage").classList.remove("intro"); // the big INSERT COIN screen is over for good
+    if (this.shadowRoot.querySelector(".stage").classList.contains("intro")) this.enterStart();
+    this.shadowRoot.querySelector(".stage").classList.remove("intro"); // the big INSERT COIN screen is over (until goInitial)
     this.startMusic();
     this.resumeMusic(); // (a no-op unless the browser refused it earlier, e.g. a touch is not a gesture that allows sound)
     if (this.motion.length < RexLambo.motionCount) this.collectMotion();
@@ -1005,8 +1051,9 @@ class RexLambo extends HTMLElement {
     if (this.attracting || this.driving || this.frozen || !this.onScreen) return;
     if (!this.shadowRoot.querySelector(".stage").classList.contains("intro")) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!this.vibe) {
-      // the first screen starts with the car stopped; only vibe mode has it cruise
+    if (!this.vibe && this.speedNow <= 0) {
+      // the first screen starts with the car stopped; only vibe mode has it cruise (a car still moving, when it is
+      // back here from start mode, eases to a stop in attractTick)
       if (this.motion.length < RexLambo.motionCount) this.collectMotion();
       return;
     }
@@ -2858,6 +2905,65 @@ class RexLambo extends HTMLElement {
           font-size: 0;
           line-height: 0;
         }
+        /*
+         * how to start, just under the big INSERT COIN (whose canvas is 6/44 as high as it is wide): a finger to touch on a
+         * touch screen, and a mouse pointer and the Enter key otherwise. Only on the first screen.
+         */
+        .start {
+          position: absolute;
+          left: 50%;
+          top: calc(50% + max(34cqw, 14rem) * 3 / 44 + max(2.2cqw, 0.9rem));
+          transform: translateX(-50%);
+          width: max-content;
+          max-width: 90%;
+          font: 700 max(0.8rem, 1.35cqw) / 1 ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #7df3ff;
+          text-shadow: 0 0 0.5em rgba(0, 229, 255, 0.8), 0 0 1.2em rgba(0, 153, 204, 0.5);
+          pointer-events: none;
+          transition: opacity 0.6s;
+        }
+        .stage:not(.intro) .start { opacity: 0; }
+        .start span { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.6em 0.7em; text-align: center; }
+        .start svg { flex: none; width: 1.8em; height: 1.8em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 0.25em rgba(0, 229, 255, 0.8)); }
+        .start svg .solid { fill: currentColor; stroke: #0b1630; stroke-width: 1; }
+        .start svg .tap { stroke: #ff7ac0; }
+        .start svg.key { width: 2.2em; color: #ff7ac0; filter: drop-shadow(0 0 0.25em rgba(255, 46, 147, 0.8)); }
+        /*
+         * in start mode, how to get back to the initial screen (see goInitial): a quiet line at the top, between the controls
+         * and the VIBE MODE switch, with an Escape key. Not on a touch screen (the back button does it there), and not where
+         * the stage is too narrow to fit it between them.
+         */
+        .esc {
+          position: absolute;
+          left: 50%;
+          top: calc(2.5% + 1.3 * var(--ctl));
+          transform: translate(-50%, -50%);
+          display: flex;
+          align-items: center;
+          gap: 0.6em;
+          font: 700 var(--ctl) / 1 ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          color: #7df3ff;
+          text-shadow: 0 0 0.5em rgba(0, 229, 255, 0.7);
+          opacity: 0.75;
+          pointer-events: none;
+          transition: opacity 0.6s;
+        }
+        .esc svg { width: 2.4em; height: 1.7em; fill: none; stroke: #ff7ac0; stroke-width: 1.6; filter: drop-shadow(0 0 0.25em rgba(255, 46, 147, 0.8)); }
+        .esc text { fill: #ff7ac0; stroke: none; font: 700 8.5px ui-monospace, Consolas, monospace; letter-spacing: 0.5px; text-anchor: middle; }
+        .stage.intro .esc { opacity: 0; }
+        @container (max-width: 1100px) { .esc { top: calc(var(--pad) + 1.3 * var(--ctl)); } }
+        @container (max-width: 820px) { .esc { display: none; } }
+        @media (hover: none) and (pointer: coarse) { .esc { display: none; } }
+        .start .touch { display: none; }
+        @media (hover: none) and (pointer: coarse) {
+          .start .touch { display: flex; }
+          .start .desk { display: none; }
+        }
         /* the pixel font canvas, scaled up crisp (each pixel of the font is about 0.8% of the stage wide) with a neon glow */
         .hint canvas {
           display: block;
@@ -3169,7 +3275,9 @@ class RexLambo extends HTMLElement {
         <img src="${src}" alt="Lamborghini Countach" draggable="false" />
         ${wheels}</div>
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
+      <div class="start" aria-hidden="true"><span class="touch"><svg viewBox="0 0 24 24"><path class="tap" d="M6.6 4.5a3.9 3.9 0 0 1 7.8 0"/><path d="M9 12V4.6a1.5 1.5 0 0 1 3 0V10l4.6 1a2 2 0 0 1 1.6 2.2l-.7 5.3a2 2 0 0 1-2 1.7H11a2 2 0 0 1-1.6-.8L5.6 14.6a1.4 1.4 0 0 1 2-1.9L9 14"/></svg>touch to start</span><span class="desk"><svg viewBox="0 0 24 24"><path class="solid" d="M6 3l12.5 7.6-5.4 1.3 3.3 6-2.4 1.3-3.3-6L6.5 17z"/></svg>click or hit<svg class="key" viewBox="0 0 30 24"><rect x="1.5" y="3.5" width="27" height="17" rx="3"/><path d="M22 8v4.5H9"/><path d="M12 9.5l-3 3 3 3"/></svg>enter to start</span></div>
       <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button></div>
+      <div class="esc" aria-hidden="true">hit<svg viewBox="0 0 34 24"><rect x="1.5" y="3.5" width="31" height="17" rx="3"/><text x="17" y="15.6">ESC</text></svg>to return</div>
       <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
       <div class="track"><div class="course"><i class="mark start"></i>${stops}<i class="mark finish"></i><i class="me"></i></div></div></div></div>
       <dialog class="viewer" aria-label="Media viewer"><div class="box"></div><button type="button" class="x" aria-label="Close">\u00D7</button></dialog>
