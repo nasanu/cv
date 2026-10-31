@@ -575,6 +575,19 @@ class RexLambo extends HTMLElement {
     this.startAttract();
   }
 
+  /**
+   * showTable a couple of frames after the car has stopped, so the work of building the panel never holds up the frame
+   * that draws the car stopping (its fade in starts after a delay anyway). Not if the car has set off again by then.
+   */
+  showTableSoon(idx) {
+    const here = this.here;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (!this.driving && this.here === here && !this.vibe) this.showTable(idx);
+      }),
+    );
+  }
+
   /** Fills the table with the content for billboard `idx` and fades it in. */
   showTable(idx) {
     const data = RexLambo.tables[idx % RexLambo.tables.length];
@@ -986,7 +999,7 @@ class RexLambo extends HTMLElement {
     this.updateTrack();
     this.driving = false;
     this.trackEls.stops.forEach((el) => (el.disabled = false));
-    this.showTable(target.idx);
+    this.showTableSoon(target.idx);
   }
 
   /**
@@ -1021,13 +1034,21 @@ class RexLambo extends HTMLElement {
     // braking at a steady rate: speed falls with the square root of the distance still to go
     const brake = Math.min(1, Math.sqrt(Math.max(left, 0) / 2.5));
     const accel = Math.min(1, this.speedNow + dt); // speeds up by 1 (full speed) per second
-    // the car has stopped only when it has actually reached the billboard, never just because its speed is 0
-    const arrived = !!target && left <= 0.01;
-    this.speedNow = arrived ? 0 : Math.max(0, Math.min(accel, brake));
+    let speedNow = Math.max(0, Math.min(accel, brake));
 
     // billboards advance at road speed: one block takes speed * roadPerSpin seconds
-    const step =
-      (this.speedNow * dt) / (RexLambo.trip * speed * RexLambo.roadPerSpin);
+    let step = (speedNow * dt) / (RexLambo.trip * speed * RexLambo.roadPerSpin);
+    // The car has stopped only when it has actually reached the billboard, never just because its speed is 0. It arrives
+    // in the frame whose step would reach (or pass) the billboard, by exactly the distance left: going past it and being
+    // put back the next frame made the billboard jump back a little just before the stop. (The braking slows it steadily
+    // right down to the billboard; calling it there from 0.01 blocks out made the last step several times the one before.)
+    let arrived = false;
+    if (target && (left <= 0.0001 || step * RexLambo.trip >= left)) {
+      step = Math.max(0, left) / RexLambo.trip;
+      arrived = true;
+      speedNow = 0;
+    }
+    this.speedNow = speedNow;
     // Nothing is drawn while the component is scrolled out of view (syncView catches it up when it comes back), and
     // nothing is redrawn that has not moved.
     const draw = (this.onScreen && step !== 0) || arrived;
@@ -1057,7 +1078,7 @@ class RexLambo extends HTMLElement {
     if (arrived) {
       this.driving = false;
       this.trackEls.stops.forEach((el) => (el.disabled = false));
-      this.showTable(target.idx);
+      this.showTableSoon(target.idx);
       return; // parked, so nothing to animate until the next key press
     }
     this.frame = requestAnimationFrame((t) => this.tick(t));
