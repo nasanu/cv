@@ -122,8 +122,8 @@ class FnLambo extends HTMLElement {
       else this.startMusic();
       if (!this.driving) this.drawCity(); // show or hide the random lights at once
     });
-    // the volume slider, under the sound switch: shown while the pointer is over the switch or the slider (or either has
-    // the focus), and on a touch screen for a few seconds after the switch is tapped or the slider is used
+    // the volume slider, under the sound switch: shown while a mouse is over the switch or the slider, and otherwise for
+    // 3 seconds after the last thing done with either (a tap, a click, a key, moving the slider), then it closes
     const vol = stage.querySelector(".vol");
     const range = vol.querySelector("input");
     vol.addEventListener("pointerdown", (e) => e.stopPropagation());
@@ -132,14 +132,14 @@ class FnLambo extends HTMLElement {
       clearTimeout(this.volTimer);
       this.volTimer = setTimeout(() => vol.classList.remove("open"), 3000);
     };
-    sound.addEventListener("pointerup", (e) => {
-      if (e.pointerType !== "mouse") showSlider();
-    });
+    vol.addEventListener("pointerup", showSlider);
+    vol.addEventListener("keydown", showSlider);
+    vol.addEventListener("focusin", showSlider);
     range.addEventListener("input", () => {
       range.style.setProperty("--v", `${range.value}%`);
       this.setVolume(range.value / 100);
       if (range.value > 0 && !this.musicOn) sound.click(); // turning it up turns the music on
-      if (vol.classList.contains("open")) showSlider();
+      showSlider();
     });
     this.updateTrack();
     const panel = stage.querySelector(".table");
@@ -3154,7 +3154,9 @@ class FnLambo extends HTMLElement {
           visibility: hidden;
           transition: opacity 0.2s, visibility 0s 0.2s;
         }
-        .vol:hover .slider, .vol:focus-within .slider, .vol.open .slider { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+        .vol.open .slider { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+        /* (a touch screen's tap leaves a "hover" behind, which would keep it open, so only a real pointer's hover counts) */
+        @media (hover: hover) { .vol:hover .slider { opacity: 1; visibility: visible; transition: opacity 0.2s; } }
         .slider input {
           -webkit-appearance: none;
           appearance: none;
