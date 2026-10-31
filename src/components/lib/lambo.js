@@ -1097,7 +1097,7 @@ class RexLambo extends HTMLElement {
       target = Math.min(1, Math.max(0, (v - this.beatLo) / Math.max(this.beatHi - this.beatLo, 0.2))) ** 2;
       // Only a beat when the bass is strong in itself and well above the voice range: talking puts some energy in the
       // bass too, but much more in the mids, so on its own it doesn't move the car
-      const gate = Math.min(1, Math.max(0, (v - 0.45) / 0.15)) * Math.min(1, Math.max(0, (v - mid - 0.08) / 0.12));
+      const gate = Math.min(1, Math.max(0, (v - 0.52) / 0.15)) * Math.min(1, Math.max(0, (v - mid - 0.11) / 0.12));
       target *= gate;
     }
     const b = this.beat || 0;
