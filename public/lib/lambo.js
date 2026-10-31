@@ -351,6 +351,32 @@ class RexLambo extends HTMLElement {
       g.gain.cancelScheduledValues(t);
       g.gain.setValueAtTime(amp * 0.01, t);
     } else if (this.audio) this.audio.volume = amp * 0.01;
+    this.setLoudness(0.01, 0.01, 0);
+  }
+
+  /** The clock the volume changes run on: the audio's own with Web Audio (it only runs while the sound does), else the page's. */
+  musicClock() {
+    return this.musicGain ? this.musicGain.context.currentTime : performance.now() / 1000;
+  }
+
+  /** Notes a volume change (as a share of full volume) from `from` to `to` over `secs`, so audible() can follow it. */
+  setLoudness(from, to, secs, linear = false) {
+    this.loudness = { t0: this.musicClock(), from, to, secs, linear };
+  }
+
+  /**
+   * How much of the music can be heard right now, from 0 (silent or nearly, 40 dB down or more) to 1 (full volume),
+   * even to the ear. The analysers read the music before its volume is set, so the equaliser and the car's beat are
+   * scaled by this: they don't show music that is muted, still fading in, or stopping.
+   */
+  audible() {
+    const a = this.audio;
+    if (!a || a.paused || a.muted) return 0;
+    const l = this.loudness;
+    if (!l) return 1;
+    const k = l.secs > 0 ? Math.min(1, Math.max(0, (this.musicClock() - l.t0) / l.secs)) : 1;
+    const share = l.linear ? l.from + (l.to - l.from) * k : l.from * (l.to / l.from) ** k;
+    return Math.min(1, Math.max(0, 1 + Math.log10(Math.max(share, 1e-4)) / 2));
   }
 
   /**
@@ -367,6 +393,7 @@ class RexLambo extends HTMLElement {
       g.gain.cancelScheduledValues(t);
       g.gain.setValueAtTime(amp * 0.01, t);
       g.gain.exponentialRampToValueAtTime(amp, t + secs);
+      this.setLoudness(0.01, 1, secs);
       return;
     }
     const a = this.audio;
@@ -378,6 +405,7 @@ class RexLambo extends HTMLElement {
       this.fadeFrame = k < 1 ? requestAnimationFrame(step) : 0;
     };
     a.volume = amp * 0.01;
+    this.setLoudness(0.01, 1, secs);
     this.fadeFrame = requestAnimationFrame(step);
   }
 
@@ -397,6 +425,7 @@ class RexLambo extends HTMLElement {
     g.gain.cancelScheduledValues(t);
     g.gain.setValueAtTime(g.gain.value, t);
     g.gain.linearRampToValueAtTime(0, t + 0.06);
+    this.setLoudness(Math.max(g.gain.value / RexLambo.musicAmplitude, 1e-4), 1e-4, 0.06, true);
     clearTimeout(this.pauseTimer);
     this.pauseTimer = setTimeout(() => {
       this.pauseTimer = 0;
@@ -904,6 +933,7 @@ class RexLambo extends HTMLElement {
       }
       last = now;
       const live = !!this.analyser && !!this.audio && !this.audio.paused;
+      const heard = live ? this.audible() : 0;
       if (live) {
         if (!data) {
           data = new Uint8Array(this.analyser.frequencyBinCount);
@@ -929,6 +959,7 @@ class RexLambo extends HTMLElement {
           lo[b] += (v - lo[b]) * (v < lo[b] ? 0.2 : 0.002);
           hi[b] += (v - hi[b]) * (v > hi[b] ? 0.2 : 0.002);
           target = sum === 0 ? 0 : Math.min(1, Math.max(0, (v - lo[b]) / Math.max(hi[b] - lo[b], 0.08)));
+          target *= heard; // only as much as the music can be heard (see audible)
         }
         const raw = target;
         target = Math.max(Math.min(raw, prev1[b]), Math.min(Math.max(raw, prev1[b]), prev2[b])); // the median of the three
@@ -1145,7 +1176,7 @@ class RexLambo extends HTMLElement {
       // Only a beat when the bass is strong in itself and well above the voice range: talking puts some energy in the
       // bass too, but much more in the mids, so on its own it doesn't move the car
       const gate = Math.min(1, Math.max(0, (v - 0.52) / 0.15)) * Math.min(1, Math.max(0, (v - mid - 0.11) / 0.12));
-      target *= gate;
+      target *= gate * this.audible();
     }
     const b = this.beat || 0;
     // onto a beat quickly (but not in a single frame), and back out more slowly
