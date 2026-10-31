@@ -2909,7 +2909,7 @@ class RexLambo extends HTMLElement {
          * how to start, just under the big INSERT COIN (whose canvas is 6/44 as high as it is wide): a finger to touch on a
          * touch screen, and a mouse pointer and the Enter key otherwise. Only on the first screen.
          */
-        .start {
+        .how {
           position: absolute;
           left: 50%;
           top: calc(50% + max(34cqw, 14rem) * 3 / 44 + max(2.2cqw, 0.9rem));
@@ -2924,12 +2924,12 @@ class RexLambo extends HTMLElement {
           pointer-events: none;
           transition: opacity 0.6s;
         }
-        .stage:not(.intro) .start { opacity: 0; }
-        .start span { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.6em 0.7em; text-align: center; }
-        .start svg { flex: none; width: 1.8em; height: 1.8em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 0.25em rgba(0, 229, 255, 0.8)); }
-        .start svg .solid { fill: currentColor; stroke: #0b1630; stroke-width: 1; }
-        .start svg .tap { stroke: #ff7ac0; }
-        .start svg.key { width: 2.2em; color: #ff7ac0; filter: drop-shadow(0 0 0.25em rgba(255, 46, 147, 0.8)); }
+        .stage:not(.intro) .how { opacity: 0; }
+        .how span { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.6em 0.7em; text-align: center; }
+        .how svg { flex: none; width: 1.8em; height: 1.8em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 0.25em rgba(0, 229, 255, 0.8)); }
+        .how svg .solid { fill: currentColor; stroke: #0b1630; stroke-width: 1; }
+        .how svg .tap { stroke: #ff7ac0; }
+        .how svg.key { width: 2.2em; color: #ff7ac0; filter: drop-shadow(0 0 0.25em rgba(255, 46, 147, 0.8)); }
         /*
          * in start mode, how to get back to the initial screen (see goInitial): a quiet line at the top, between the controls
          * and the VIBE MODE switch, with an Escape key. Not on a touch screen (the back button does it there), and not where
@@ -2959,10 +2959,57 @@ class RexLambo extends HTMLElement {
         @container (max-width: 1100px) { .esc { top: calc(var(--pad) + 1.3 * var(--ctl)); } }
         @container (max-width: 820px) { .esc { display: none; } }
         @media (hover: none) and (pointer: coarse) { .esc { display: none; } }
-        .start .touch { display: none; }
+        /*
+         * on a touch screen, while a text panel is showing: a finger swiping, pulsing at each side, for the swipes that
+         * drive on (right, on the right) and back (left, on the left). Over the panel's edges, out of the way of its text.
+         */
+        .swipe { display: none; }
         @media (hover: none) and (pointer: coarse) {
-          .start .touch { display: flex; }
-          .start .desk { display: none; }
+          .swipe {
+            display: block;
+            position: absolute;
+            top: 50%;
+            z-index: 4;
+            width: 2.2rem;
+            height: 2.2rem;
+            color: #7df3ff;
+            opacity: 0;
+            transform: translateY(-50%);
+            pointer-events: none;
+          }
+          .swipe.next { right: 0.1rem; }
+          .swipe.prev { left: 0.1rem; transform: translateY(-50%) scaleX(-1); }
+          /* shown for 3 seconds each time a panel comes up, fading in with it and then away */
+          .stage.table-on .swipe { animation: swipe-show 3s 0.35s both; }
+          .swipe svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 0.3em rgba(0, 229, 255, 0.85));
+            animation: swipe 1.6s ease-in-out infinite;
+          }
+          .swipe .arrow { stroke: #ff7ac0; }
+        }
+        @keyframes swipe-show {
+          0% { opacity: 0; }
+          15%, 80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        /* a nudge the way of the swipe, brightening as it goes */
+        @keyframes swipe {
+          0%, 100% { transform: translateX(-0.25rem); opacity: 0.35; }
+          50% { transform: translateX(0.25rem); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) { .swipe svg { animation: none; } }
+        .how .touch { display: none; }
+        @media (hover: none) and (pointer: coarse) {
+          .how .touch { display: flex; }
+          .how .desk { display: none; }
         }
         /* the pixel font canvas, scaled up crisp (each pixel of the font is about 0.8% of the stage wide) with a neon glow */
         .hint canvas {
@@ -3275,8 +3322,9 @@ class RexLambo extends HTMLElement {
         <img src="${src}" alt="Lamborghini Countach" draggable="false" />
         ${wheels}</div>
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
-      <div class="start" aria-hidden="true"><span class="touch"><svg viewBox="0 0 24 24"><path class="tap" d="M6.6 4.5a3.9 3.9 0 0 1 7.8 0"/><path d="M9 12V4.6a1.5 1.5 0 0 1 3 0V10l4.6 1a2 2 0 0 1 1.6 2.2l-.7 5.3a2 2 0 0 1-2 1.7H11a2 2 0 0 1-1.6-.8L5.6 14.6a1.4 1.4 0 0 1 2-1.9L9 14"/></svg>touch to start</span><span class="desk"><svg viewBox="0 0 24 24"><path class="solid" d="M6 3l12.5 7.6-5.4 1.3 3.3 6-2.4 1.3-3.3-6L6.5 17z"/></svg>click or hit<svg class="key" viewBox="0 0 30 24"><rect x="1.5" y="3.5" width="27" height="17" rx="3"/><path d="M22 8v4.5H9"/><path d="M12 9.5l-3 3 3 3"/></svg>enter to start</span></div>
+      <div class="how" aria-hidden="true"><span class="touch"><svg viewBox="0 0 24 24"><path class="tap" d="M6.6 4.5a3.9 3.9 0 0 1 7.8 0"/><path d="M9 12V4.6a1.5 1.5 0 0 1 3 0V10l4.6 1a2 2 0 0 1 1.6 2.2l-.7 5.3a2 2 0 0 1-2 1.7H11a2 2 0 0 1-1.6-.8L5.6 14.6a1.4 1.4 0 0 1 2-1.9L9 14"/></svg>touch to start</span><span class="desk"><svg viewBox="0 0 24 24"><path class="solid" d="M6 3l12.5 7.6-5.4 1.3 3.3 6-2.4 1.3-3.3-6L6.5 17z"/></svg>click or hit<svg class="key" viewBox="0 0 30 24"><rect x="1.5" y="3.5" width="27" height="17" rx="3"/><path d="M22 8v4.5H9"/><path d="M12 9.5l-3 3 3 3"/></svg>enter to start</span></div>
       <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button></div>
+      <div class="swipe prev" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div><div class="swipe next" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="arrow" d="M5 6h20M21 2l4 4-4 4"/><path d="M11 18v-6.4a1.4 1.4 0 0 1 2.8 0v4.8l4.2.9a1.8 1.8 0 0 1 1.5 2l-.6 4.8a1.8 1.8 0 0 1-1.8 1.6h-4a1.8 1.8 0 0 1-1.5-.7l-3.4-4.2a1.3 1.3 0 0 1 1.9-1.7L11 20.5"/></svg></div>
       <div class="esc" aria-hidden="true">hit<svg viewBox="0 0 34 24"><rect x="1.5" y="3.5" width="31" height="17" rx="3"/><text x="17" y="15.6">ESC</text></svg>to return</div>
       <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
       <div class="track"><div class="course"><i class="mark start"></i>${stops}<i class="mark finish"></i><i class="me"></i></div></div></div></div>
