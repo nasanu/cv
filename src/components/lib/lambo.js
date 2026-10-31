@@ -543,10 +543,9 @@ class RexLambo extends HTMLElement {
       this.vibeBefore = null;
       if (before) this.musicOn = before.musicOn;
       sound.setAttribute("aria-checked", this.musicOn);
-      if (!keepMusic) {
-        // the switch itself: back to the silent INSERT COIN screen, with the car stopped
-        this.pauseMusic(); // the car eases to a stop in attractTick
-      }
+      // the switch itself: back to the silent INSERT COIN screen, with the car stopped (it eases to a stop in attractTick).
+      // A press that leaves vibe mode keeps the music going, unless the sound switch had been off before vibe mode.
+      if (!keepMusic || !this.musicOn) this.pauseMusic();
       this.announce("Vibe mode off.");
     }
     if (!this.driving) this.drawCity(); // the lights follow the music (or the random flicker) at once
