@@ -23,6 +23,7 @@ class RexLambo extends HTMLElement {
   // way hearing works: twice as loud is 10 dB more, so 30% loudness is about 17 dB down (amplitude 0.135) and 60% about
   // 7 dB down (amplitude 0.43).
   static musicDelay = 1; // seconds of quiet before a track starts
+  static musicFadeIn = 1; // seconds the music takes to rise from quiet to full volume when it starts
   static musicVolume = 0.6;
   static musicAmplitude = 10 ** ((10 * Math.log2(RexLambo.musicVolume)) / 20);
   static defaultSpeed = 0.2; // seconds per wheel revolution
@@ -306,6 +307,34 @@ class RexLambo extends HTMLElement {
       this.musicTimer = 0;
       if (this.musicOn) a.play().catch(() => {}); // blocked or missing: the scene just stays quiet
     }, RexLambo.musicDelay * 1000);
+  }
+
+  /**
+   * Brings the music in from quiet (40 dB down) up to its full volume over `musicFadeIn` seconds, rising evenly to the
+   * ear. With Web Audio the volume is the gain node's (the analyser before it still sees the full level, so the
+   * equaliser doesn't fade in too); without it, the player's own volume.
+   */
+  fadeInMusic() {
+    const amp = RexLambo.musicAmplitude;
+    const secs = RexLambo.musicFadeIn;
+    const g = this.musicGain;
+    if (g) {
+      const t = g.context.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(amp * 0.01, t);
+      g.gain.exponentialRampToValueAtTime(amp, t + secs);
+      return;
+    }
+    const a = this.audio;
+    cancelAnimationFrame(this.fadeFrame);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, Math.max(0, (now - t0) / (secs * 1000)));
+      a.volume = amp * 0.01 ** (1 - k);
+      this.fadeFrame = k < 1 ? requestAnimationFrame(step) : 0;
+    };
+    a.volume = amp * 0.01;
+    this.fadeFrame = requestAnimationFrame(step);
   }
 
   /** Stops the soundtrack, including one still waiting to start. */
@@ -715,6 +744,7 @@ class RexLambo extends HTMLElement {
       source.connect(gain).connect(ctx.destination);
       this.audioCtx = ctx;
       this.analyser = analyser;
+      this.musicGain = gain;
       audio.addEventListener("play", () => ctx.resume().catch(() => {}));
     } catch {
       /* no Web Audio: the music plays as it is */
@@ -867,6 +897,7 @@ class RexLambo extends HTMLElement {
     this.audio = audio;
     this.hookAnalyser(audio);
     audio.addEventListener("play", () => this.resumeEq());
+    audio.addEventListener("playing", () => this.fadeInMusic()); // every time it starts, or carries on after a pause
     this.playMusic();
   }
 
