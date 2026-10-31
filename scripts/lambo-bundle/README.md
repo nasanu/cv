@@ -1,7 +1,7 @@
 # rex-lambo
 
 A retrowave scene as a single web component: a pixel art Lamborghini Countach with spinning wheels, on a neon highway
-beside a wireframe skyline, a big moon and twinkling stars. On the INSERT COIN screen the car cruises along an empty road, with no billboards, until Enter, Space or a tap, drives to a
+beside a wireframe skyline, a big moon and twinkling stars. On the INSERT COIN screen the car waits stopped on an empty road (it cruises there in vibe mode), with no billboards, until Enter, Space or a tap, drives to a
 roadside billboard, stops, and shows a text panel for it. The next press or tap drives on to the next billboard.
 
 No dependencies, no build step. It is one JavaScript file plus a few images.
@@ -41,6 +41,9 @@ height 28rem). `--borderRadius` sets the corner radius.
 
 ### Controls
 
+- VIBE MODE (top right, always shown): a neon switch. Switching it on, from any screen, sends the car back to the INSERT COIN screen
+  and turns the music and the skyline equaliser on, with no text panels. Any press, key or swipe then switches it off and carries on as
+  normal (driving to the first billboard). Switching it off with the switch itself stops the music.
 - Keyboard: the component can be tabbed to. Enter, Space or the left arrow drives to the next billboard (like a swipe right) and the right arrow goes back
   (not a key held down, and not Ctrl, Cmd, Alt or Shift shortcuts). Letter keys do nothing. The keys work while the component has the focus, and
   on a `fill` one from anywhere on the page, but never while typing in a field or on a button or link. While the text panel has the focus,

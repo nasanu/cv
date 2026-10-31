@@ -9,7 +9,7 @@
  *   speed  - seconds per wheel revolution (default 0.2, smaller is faster)
  *   avatar - image for the character profile billboard (default "./me.jpg")
  *   paused - freezes the wheels, the road and the billboards
- *   (the car cruises along an empty road on the INSERT COIN screen until Enter, Space, the left arrow or a touch, then drives to a billboard, stops, and goes on at the next press;
+ *   (the car waits stopped on the INSERT COIN screen (it cruises there in vibe mode) until Enter, Space, the left arrow or a touch, then drives to a billboard, stops, and goes on at the next press;
  *   the right arrow or a swipe left goes back. It is focusable, and a live region announces each stop)
  */
 class RexLambo extends HTMLElement {
@@ -70,6 +70,8 @@ class RexLambo extends HTMLElement {
     this.analyser = null;
     this.musicOn = true; // the sound switch
     this.turbo = false; // the TURBO switch: double speed while on
+    this.vibe = false; // the VIBE MODE switch: the music and the equaliser on, and no text panels (see setVibe)
+    this.vibeBefore = null; // what the music was doing before vibe mode, to put back when it is switched off
     this.boost = 1; // the speed multiplier right now, easing between 1 and 2 as the switch is flipped
     this.here = -1; // the table entry the car is at (or heading for): -1 is the start line
     this.journey = null; // the drive in progress, or the last one: see driveTo
@@ -103,6 +105,10 @@ class RexLambo extends HTMLElement {
       this.turbo = !this.turbo;
       turbo.setAttribute("aria-checked", this.turbo);
     });
+    // the VIBE MODE switch (top right, on the INSERT COIN screen): music and equaliser on, text panels off
+    const vibe = stage.querySelector(".vibe");
+    vibe.addEventListener("pointerdown", (e) => e.stopPropagation());
+    vibe.addEventListener("click", () => this.setVibe(!this.vibe));
     // the sound switch beside it: music on or off (a click is a user gesture, so it can start the music too)
     const sound = stage.querySelector(".sound");
     sound.addEventListener("pointerdown", (e) => e.stopPropagation());
@@ -483,6 +489,67 @@ class RexLambo extends HTMLElement {
     );
   }
 
+  /**
+   * Switches vibe mode on or off. Vibe mode is always the first screen: switching it on from anywhere else sends the car
+   * back to the INSERT COIN screen (see restartIntro), then the music plays (which lights the skyline's equaliser) and no
+   * text panels are shown. Switching it off stops the music, as on a first screen that has not been driven yet, unless `keepMusic` is set, which is what the press that ends vibe mode uses: it goes
+   * straight on to drive, which plays the music anyway.
+   */
+  setVibe(on, keepMusic = false) {
+    if (on === this.vibe) return;
+    this.vibe = on;
+    const stage = this.shadowRoot.querySelector(".stage");
+    const sound = stage.querySelector(".sound");
+    stage.classList.toggle("vibe-on", on);
+    stage.querySelector(".vibe").setAttribute("aria-checked", on);
+    if (on) {
+      this.vibeBefore = { musicOn: this.musicOn, playing: !!this.audio && !this.audio.paused };
+      this.restartIntro();
+      this.musicOn = true;
+      sound.setAttribute("aria-checked", true);
+      if (this.audio) this.audio.play().catch(() => {});
+      else this.startMusic();
+      this.announce("Vibe mode on. Press to leave it.");
+    } else {
+      const before = this.vibeBefore;
+      this.vibeBefore = null;
+      if (before) this.musicOn = before.musicOn;
+      sound.setAttribute("aria-checked", this.musicOn);
+      if (!keepMusic) {
+        // the switch itself: back to the silent INSERT COIN screen, with the car stopped
+        this.audio?.pause();
+        this.stopAttract();
+        this.speedNow = 0;
+        this.setRate(0);
+      }
+      this.announce("Vibe mode off.");
+    }
+    if (!this.driving) this.drawCity(); // the lights follow the music (or the random flicker) at once
+  }
+
+  /** Back to the INSERT COIN screen: the billboards gone, the car at the start line cruising along the empty road, the panel hidden. */
+  restartIntro() {
+    const stage = this.shadowRoot.querySelector(".stage");
+    cancelAnimationFrame(this.frame);
+    this.frame = 0;
+    this.stopAttract();
+    this.driving = false;
+    for (const b of this.boards) b.el.remove();
+    this.boards = [];
+    this.billboardCount = 0;
+    this.here = -1;
+    this.journey = null;
+    this.turbo = false;
+    this.boost = 1;
+    stage.querySelector(".turbo").setAttribute("aria-checked", false);
+    this.hideTable();
+    this.trackEls.stops.forEach((el) => (el.disabled = false));
+    stage.classList.add("intro");
+    this.setPrompt("insert coin");
+    this.updateTrack();
+    this.startAttract();
+  }
+
   /** Fills the table with the content for billboard `idx` and fades it in. */
   showTable(idx) {
     const data = RexLambo.tables[idx % RexLambo.tables.length];
@@ -558,11 +625,13 @@ class RexLambo extends HTMLElement {
 
   /** Called on a drive key (see onKey) or a touch. Only does anything while the car is parked: drives on to the next billboard. */
   go() {
+    if (this.vibe) this.setVibe(false, true); // any press ends vibe mode, and then does what it always does
     this.driveTo((this.here + 1) % RexLambo.tables.length);
   }
 
   /** A swipe left: drives round to the billboard before this one, straight past any in between (none, if there is no way back). */
   goPrevious() {
+    if (this.vibe) this.setVibe(false, true);
     if (this.here < 0) return; // still at the start line
     this.goTo((this.here - 1 + RexLambo.tables.length) % RexLambo.tables.length);
   }
@@ -579,6 +648,7 @@ class RexLambo extends HTMLElement {
 
   /** Drives straight to table entry ``k`` (a click on its mini billboard), past any billboards in between. */
   goTo(k) {
+    if (this.vibe) this.setVibe(false, true);
     if (k === this.here) return; // already there
     this.driveTo(k);
   }
@@ -772,15 +842,20 @@ class RexLambo extends HTMLElement {
   }
 
   /**
-   * The INSERT COIN screen: until the first press the car cruises along an empty road, with no billboards, the wheels
+   * The INSERT COIN screen in vibe mode: the car cruises along an empty road (without vibe mode it waits there stopped), with no billboards, the wheels
    * spinning and the road, barrier and skyline scrolling round and round (the skyline repeats every `cityPeriod` blocks and
-   * the road's pattern every block). A press ends it (see driveTo) and the car carries on from the speed it has. It does
+   * the road's pattern every block). A press ends vibe mode and it (see driveTo) and the car carries on from the speed it has. It does
    * nothing for reduced motion, while paused, or while the component is off screen (it starts again when it is back).
    */
   startAttract() {
     if (this.attracting || this.driving || this.frozen || !this.onScreen) return;
     if (!this.shadowRoot.querySelector(".stage").classList.contains("intro")) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!this.vibe) {
+      // the first screen starts with the car stopped; only vibe mode has it cruise
+      if (this.motion.length < RexLambo.motionCount) this.collectMotion();
+      return;
+    }
     this.attracting = true;
     if (this.motion.length < RexLambo.motionCount) this.collectMotion(); // it was hidden when it was set up
     // The wheels turn with a compositor animation, which the browser only starts a moment after the page has first been drawn
@@ -2264,7 +2339,7 @@ class RexLambo extends HTMLElement {
         .table {
           position: absolute;
           right: 3%;
-          top: 4%;
+          top: calc(2.5% + 2.6 * var(--ctl) + 1.6cqw); /* below the VIBE MODE switch */
           bottom: 4%;
           width: 46%;
           overflow-y: auto;
@@ -2298,6 +2373,12 @@ class RexLambo extends HTMLElement {
         @container (max-width: 1100px) {
           /* one gap (--pad) for everything: the controls and the panel from the edges, and the panel from the controls and the strip */
           .stage .controls, .stage:not(.intro) .hint { left: var(--pad); top: var(--pad); }
+          .stage .vibe { right: var(--pad); top: var(--pad); }
+        }
+        @container (max-width: 640px) {
+          .stage .vibe { gap: 0.6em; padding: 0.6em 0.7em; letter-spacing: 0.1em; }
+        }
+        @container (max-width: 1100px) {
           /* the progress strip loses its box and its START and FINISH labels, and stretches across the whole width, flush
              with the bottom edge. Its two ends line up with the visible edges of the text panel above it: the panel's frame
              is drawn 0.3em (of the panel's font) outside its box, the finish line reaches 0.5em and the flag 0.09em (of the
@@ -2541,7 +2622,7 @@ class RexLambo extends HTMLElement {
          */
         .controls { position: absolute; left: 3%; top: 2.5%; display: flex; gap: 1.6em; font-size: var(--ctl); transition: opacity 0.6s; }
         .stage.intro .controls { opacity: 0; pointer-events: none; }
-        .turbo, .sound {
+        .turbo, .sound, .vibe {
           display: flex;
           align-items: center;
           gap: 0.9em;
@@ -2557,7 +2638,7 @@ class RexLambo extends HTMLElement {
           box-shadow: 0 -0.2em 0 0 #09c, 0 0.2em 0 0 #09c, -0.2em 0 0 0 #09c, 0.2em 0 0 0 #09c, 0 0 1.2em rgba(0, 153, 204, 0.45);
           transition: opacity 0.6s, color 0.2s, box-shadow 0.2s;
         }
-        .turbo:focus-visible, .sound:focus-visible { outline: 0.15em solid #fff3a8; outline-offset: 0.45em; }
+        .turbo:focus-visible, .sound:focus-visible, .vibe:focus-visible { outline: 0.15em solid #fff3a8; outline-offset: 0.45em; }
         .sound { padding: 0.6em 0.8em; }
         .sound svg { display: block; width: 2.2em; height: 1.4em; fill: #8d93a0; stroke: #8d93a0; stroke-width: 2; stroke-linecap: round; transition: fill 0.2s, stroke 0.2s; }
         .sound .spk { stroke-linejoin: round; }
@@ -2565,14 +2646,25 @@ class RexLambo extends HTMLElement {
         .sound .off { stroke: #ff4f4f; }
         .sound[aria-checked="true"] svg { fill: #7df3ff; stroke: #7df3ff; }
         .sound[aria-checked="true"] .off, .sound[aria-checked="false"] .wave { display: none; }
-        .turbo .sw { position: relative; width: 2.8em; height: 1.4em; box-sizing: border-box; border: 0.15em solid #7a7a96; background: #1d1d28; transition: border-color 0.2s, background 0.2s; }
-        .turbo .sw i { position: absolute; top: 0.1em; left: 0.1em; width: 0.9em; height: 0.9em; background: #8d93a0; transition: transform 0.2s, background 0.2s, box-shadow 0.2s; }
+        .turbo .sw, .vibe .sw { position: relative; width: 2.8em; height: 1.4em; box-sizing: border-box; border: 0.15em solid #7a7a96; background: #1d1d28; transition: border-color 0.2s, background 0.2s; }
+        .turbo .sw i, .vibe .sw i { position: absolute; top: 0.1em; left: 0.1em; width: 0.9em; height: 0.9em; background: #8d93a0; transition: transform 0.2s, background 0.2s, box-shadow 0.2s; }
         .turbo[aria-checked="true"] {
           color: #fff3a8;
           box-shadow: 0 -0.2em 0 0 #ff7a45, 0 0.2em 0 0 #ff7a45, -0.2em 0 0 0 #ff7a45, 0.2em 0 0 0 #ff7a45, 0 0 1.4em rgba(255, 122, 69, 0.7);
         }
         .turbo[aria-checked="true"] .sw { border-color: #ff7a45; background: #5a1f10; }
         .turbo[aria-checked="true"] .sw i { transform: translateX(1.4em); background: #ffb347; box-shadow: 0 0 0.7em #ff7a45; }
+        /*
+         * VIBE MODE: top right, always there (the text panel sits below it). Neon magenta where TURBO is orange.
+         */
+        .vibe { position: absolute; right: 3%; top: 2.5%; z-index: 3; font-size: var(--ctl); will-change: transform; transition: opacity 0.6s, color 0.2s, box-shadow 0.2s, visibility 0s; }
+        .vibe[aria-checked="true"] {
+          color: #ffd6f0;
+          text-shadow: 0 0 0.6em rgba(255, 46, 147, 0.9);
+          box-shadow: 0 -0.2em 0 0 #ff2e93, 0 0.2em 0 0 #ff2e93, -0.2em 0 0 0 #ff2e93, 0.2em 0 0 0 #ff2e93, 0 0 1.4em rgba(255, 46, 147, 0.75), inset 0 0 1em rgba(255, 46, 147, 0.25);
+        }
+        .vibe[aria-checked="true"] .sw { border-color: #ff2e93; background: #4a0f3a; }
+        .vibe[aria-checked="true"] .sw i { transform: translateX(1.4em); background: #ff7ac0; box-shadow: 0 0 0.7em #ff2e93, 0 0 1.2em #00e5ff; }
         /* hidden on the INSERT COIN screen, and fades in when the car first sets off */
         /* the track box and the controls get layers of their own, so the repainting road behind them can't make them flicker */
         .track { transition: opacity 0.6s; will-change: transform; z-index: 3; }
@@ -2821,6 +2913,7 @@ class RexLambo extends HTMLElement {
         ${wheels}
       </div><div class="table" role="region" aria-label="Details" tabindex="0"></div><div class="hint" aria-hidden="true">insert coin</div>
       <div class="controls"><button type="button" class="turbo" role="switch" aria-checked="false"><span>TURBO</span><span class="sw"><i></i></span></button><button type="button" class="sound" role="switch" aria-checked="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M3 9h4l5-4v14l-5-4H3z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18 5.5a9 9 0 0 1 0 13"/><path class="off" d="M15 9l6 6M21 9l-6 6"/></svg></button></div>
+      <button type="button" class="vibe" role="switch" aria-checked="false"><span>VIBE MODE</span><span class="sw"><i></i></span></button>
       <div class="track"><div class="course"><i class="mark start"></i>${stops}<i class="mark finish"></i><i class="me"></i></div></div></div></div>
       <dialog class="viewer" aria-label="Media viewer"><div class="box"></div><button type="button" class="x" aria-label="Close">\u00D7</button></dialog>
     `;
