@@ -28,7 +28,7 @@ $notes = @{
   "images/me.jpg"                = "The photo on the profile billboard. The default ``avatar``"
 }
 $rows = foreach ($a in $assets) {
-  $note = if ($notes.ContainsKey($a)) { $notes[$a] } elseif ($a -like "*.mp3") { "Soundtrack (plays from the first key press or tap at 30% volume). Credit: see Credits below" } else { "Media shown in a text panel (see ``tables`` in ``lambo.js``)" }
+  $note = if ($notes.ContainsKey($a)) { $notes[$a] } elseif ($a -like "*.mp3") { "Soundtrack (off at first; plays at 30% volume once the sound switch is turned on). Credit: see Credits below" } else { "Media shown in a text panel (see ``tables`` in ``lambo.js``)" }
   "| ``$a`` | $note |"
 }
 $readme = [System.IO.File]::ReadAllText((Join-Path $template "README.md")).Replace("{{ASSETS}}", ($rows -join "`n"))
