@@ -1,6 +1,6 @@
 # fn-lambo
 
-`<fn-lambo>`, a retrowave scene as a single web component, and `index.html`, which shows it full screen.
+This is the personal CV/Portfolio site of Nathan Brown.  It's a retro wave inspired scene of a white lambo rocking along to music while presenting info about its developer.
 
 No dependencies and no build step: open `index.html` (or serve the folder, which the skyline equaliser needs).
 
@@ -9,4 +9,4 @@ No dependencies and no build step: open `index.html` (or serve the folder, which
 - images and `music/`: the assets `lambo.js` and `index.html` use, beside the page because their paths are relative to it
 
 
-Thats is.  Simple, solid.
+Thats is.  Simple. Solid.
