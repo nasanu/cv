@@ -1,22 +1,17 @@
-# Builds dist/fn-lambo.zip: everything <fn-lambo> is and needs, so it can be dropped into another site.
+# Builds fn-lambo.zip (in the repo root): everything <fn-lambo> is and needs, so it can be dropped into another site.
 #
-#   lambo.js    the component (src/components/lib/lambo.js, it has no imports)
+#   lambo.js    the component (lib/lambo.js, it has no imports)
 #   assets      every image or media file lambo.js refers to as "./name.ext" (the car, the avatar and the media in the
-#               text panels), taken from public/. A reference to a file that is not in public/ stops the build.
+#               text panels), taken from the repo root. A reference to a file that is not there stops the build.
 #   index.html  a minimal demo page, README.md the docs (both from scripts/lambo-bundle/)
-#
-# Run after `astro build` (npm's postbuild does that), because it writes into dist/.
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.IO.Compression
 
 $root = Split-Path $PSScriptRoot -Parent
-$dist = Join-Path $root "dist"
 $template = Join-Path $PSScriptRoot "lambo-bundle"
-$jsPath = Join-Path $root "src/components/lib/lambo.js"
-$zipPath = Join-Path $dist "fn-lambo.zip"
+$jsPath = Join-Path $root "lib/lambo.js"
+$zipPath = Join-Path $root "fn-lambo.zip"
 $folder = "fn-lambo"
-
-if (-not (Test-Path $dist)) { throw "dist/ not found: run the build first" }
 
 # the files lambo.js points at
 $js = [System.IO.File]::ReadAllText($jsPath)
@@ -24,7 +19,7 @@ $assets = [regex]::Matches($js, '\./[\w./-]+\.(?:png|jpe?g|gif|webp|avif|svg|mp4
   ForEach-Object { $_.Value.Substring(2) } |
   Sort-Object -Unique
 foreach ($a in $assets) {
-  if (-not (Test-Path (Join-Path $root "public/$a"))) { throw "lambo.js refers to ./$a but public/$a does not exist" }
+  if (-not (Test-Path (Join-Path $root $a))) { throw "lambo.js refers to ./$a but $a does not exist" }
 }
 
 # a README table row for each asset
@@ -54,7 +49,7 @@ try {
   & $add "lambo.js" ([System.IO.File]::ReadAllBytes($jsPath))
   & $add "index.html" ([System.IO.File]::ReadAllBytes((Join-Path $template "index.html")))
   & $add "README.md" ($utf8.GetBytes($readme))
-  foreach ($a in $assets) { & $add $a ([System.IO.File]::ReadAllBytes((Join-Path $root "public/$a"))) }
+  foreach ($a in $assets) { & $add $a ([System.IO.File]::ReadAllBytes((Join-Path $root $a))) }
 }
 finally {
   $zip.Dispose()
@@ -62,4 +57,4 @@ finally {
 }
 
 $kb = [math]::Round((Get-Item $zipPath).Length / 1KB)
-Write-Output "fn-lambo bundle written to dist/fn-lambo.zip ($kb KB, $($assets.Count) assets)"
+Write-Output "fn-lambo bundle written to fn-lambo.zip ($kb KB, $($assets.Count) assets)"
