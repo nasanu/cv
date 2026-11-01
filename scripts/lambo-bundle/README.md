@@ -14,14 +14,14 @@ No dependencies, no build step. It is one JavaScript file plus a few images.
 | `index.html`            | A minimal demo page showing how to use it                             |
 {{ASSETS}}
 
-Image paths are relative (`./name.jpg`), so they are resolved against the page that uses the component, not against
-`lambo.js`. Keep the images beside your HTML page (or change the paths, see below). This also lets the demo work under a
+Image paths are relative (`./images/name.jpg`), so they are resolved against the page that uses the component, not against
+`lambo.js`. Keep the `images` folder beside your HTML page (or change the paths, see below). This also lets the demo work under a
 sub path such as GitHub Pages.
 
 ## Use it
 
 ```html
-<fn-lambo src="./lambo-transparent.png" avatar="./me.jpg" speed="0.2"></fn-lambo>
+<fn-lambo src="./images/lambo-transparent.png" avatar="./images/me.jpg" speed="0.2"></fn-lambo>
 <script src="./lambo.js"></script>
 ```
 
@@ -33,8 +33,8 @@ height 28rem). `--borderRadius` sets the corner radius.
 
 | Attribute | Default                  | Meaning                                                                    |
 | --------- | ------------------------ | -------------------------------------------------------------------------- |
-| `src`     | `./lambo-transparent.png` | The car image. Wheels are drawn over it, so a different car needs new wheel positions (`FnLambo.wheels`) |
-| `avatar`  | `./me.jpg`               | The photo on the profile billboard. Read when the component connects       |
+| `src`     | `./images/lambo-transparent.png` | The car image. Wheels are drawn over it, so a different car needs new wheel positions (`FnLambo.wheels`) |
+| `avatar`  | `./images/me.jpg`               | The photo on the profile billboard. Read when the component connects       |
 | `speed`   | `0.2`                    | Seconds per wheel revolution. Smaller is faster. Everything moves in step  |
 | `paused`  | (absent)                 | Freezes the wheels, road and billboards while present                      |
 | `fill`   | (absent)                 | Runs full screen, not in a box: the component fills the box it is given (`position: fixed; inset: 0` for the whole window), with square corners. The layout is never wider than 1.6 times its height, so on a wider window it is centred and the sky, road and skyline carry on past its sides. The demo `index.html` uses this |
@@ -80,7 +80,7 @@ per billboard, and the billboards go round the entries in order:
   scores: [["CYCL", "64000"], ["YT", "29339"], ["TVL", "10220"]], // three [name, score] pairs
   text: ["First paragraph (may contain HTML).", "Second paragraph."],
   media: [                       // optional
-    { type: "image", file: "./himawariCut.jpg", subtitle: "Caption under it" }, // type: image (default), video or audio
+    { type: "image", file: "./images/himawariCut.jpg", subtitle: "Caption under it" }, // type: image (default), video or audio
   ],
   links: [                       // optional
     { text: "Resume", type: "download", file: "./resume.pdf" },          // type: download (down arrow, the default)

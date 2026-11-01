@@ -6,7 +6,7 @@ No dependencies and no build step: open `index.html` (or serve the folder, which
 
 - `lib/lambo.js`: the component
 - `index.html`: the full screen page
-- images and `music/`: the assets `lambo.js` and `index.html` use, beside the page because their paths are relative to it
+- `images/` and `music/`: the assets `lambo.js` and `index.html` use, beside the page because their paths are relative to it
 
 
 Thats is.  Simple. Solid.
