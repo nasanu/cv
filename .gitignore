@@ -1,6 +1,3 @@
-# built by scripts/bundle-lambo.ps1
-fn-lambo.zip
-
 # macOS-specific files
 .DS_Store
 
