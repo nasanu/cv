@@ -5,6 +5,7 @@ This is the personal CV/Portfolio site of Nathan Brown.  It's a retro wave inspi
 No dependencies and no build step: open `index.html` (or serve the folder, which the skyline equaliser needs).
 
 - `lib/lambo.js`: the component
+- `content/tables.js`: the text panels shown at each billboard (titles, scores, text, pictures and links), to edit without touching the code
 - `index.html`: the full screen page
 - `images/` and `music/`: the assets `lambo.js` and `index.html` use, beside the page because their paths are relative to it
 
