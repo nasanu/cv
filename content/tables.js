@@ -24,7 +24,7 @@ window.fnLamboTables = [
       "This site is a showcase of my work, starting by detailing the site you are on right now.",
       "Kidshibuya.io single page built with the most basic of building blocks, just HTML, CSS and JavaScript. No npm installs, no libraries. It is designed to be fast, responsive and accessible. And lets not forget simple. Not everything needs to be a React app, and not everything needs to be a single page app. No loading bar, no three.js, just perfect 100s in Lighthouse.",
        "The road is just a collection of divs, the car a simple image with rotating css wheels...  The billboards that signpost my work are just divs with css. The only thing that is a bit more complex is the progress strip, which is just a collection of divs with background images and a little bit of JavaScript to make it scroll.",
-      "The sky is full of twinkling stars and if you are lucky, you might even see a shooting star. The buildings have window lights, but try flicking the sound on, you will get a surprise. And the vide mode...",
+      "The sky is full of twinkling stars and if you are lucky, you might even see a shooting star. The buildings have window lights, but try flicking the sound on, you will get a surprise. And the vibe mode...",
     ],
     links: [
       {
