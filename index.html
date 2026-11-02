@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Nathan Brown - Portfolio</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <!-- added to the home screen, it opens full screen in landscape, with no browser bar (the only way on an iPhone) -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#000000" />
     <style>
       html,
       body {
@@ -22,5 +28,21 @@
   <body>
     <fn-lambo fill src="./images/lambo-transparent.png" avatar="./images/me.jpg" speed="0.2"></fn-lambo>
     <script src="./lib/lambo.js"></script>
+    <script>
+      // On a phone in landscape, the first tap takes the page full screen, with no browser bar (a browser only allows
+      // that from a tap). Turning back to portrait leaves full screen. iPhones have no full screen for pages: there the
+      // page only fills the screen when it is added to the home screen (see the manifest).
+      const landscape = matchMedia("(orientation: landscape) and (pointer: coarse)");
+      const root = document.documentElement;
+      if (root.requestFullscreen) {
+        addEventListener("pointerup", (e) => {
+          if (e.pointerType === "mouse" || !landscape.matches || document.fullscreenElement) return;
+          root.requestFullscreen({ navigationUI: "hide" }).catch(() => {}); // (refused: it stays as it is)
+        });
+        landscape.addEventListener("change", () => {
+          if (!landscape.matches && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
