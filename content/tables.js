@@ -53,14 +53,16 @@ window.fnLamboTables = [
   {
     title: "LEET SKILLS",
     scores: [
-      ["HTML", "9001"],
-      ["CSS", "8900"],
-      ["JS", "8100"],
+      ["REACT", "9001"],
+      ["TS", "8900"],
+      ["CSS", "8100"],
     ],
     text: [
-      "My recent experience is in React, AstroJS and Web Components. I have built email clients, messaging dashboards and messaging clients, some standalone, some in webviews as 'miniapps'.",
-      "I have also worked in Vue and Angular, and have of course incorporated all sorts of state management, from full-on Redux/Saga to Zustand to custom in-cache solutions.",
-      "Further back, I built my own CMS in ASP.NET C#, worked as a WordPress developer in PHP, and created a Reddit clone with MongoDB, among many other things.",
+      "I'm a senior front-end developer and team lead. My core stack is TypeScript, React (including React 19 and the React Compiler), Zustand, Redux, Vue, Angular, Astro and Web Components, on top of solid HTML5, CSS3 and Sass.",
+      "At Rakuten I led a team of 5 building dozens of mini-apps inside the Link superapp (6M+ daily users), including Rakumail, an email client, and a faster web rebuild of the native in-app chat with custom message types such as video carousels.",
+      "I also refactored the Broadcasting dashboard that creates, sends and tracks consumer marketing messages. API calls on load went from 60 to 3, Zustand replaced prop chains of 70+ parameters, and the bundle lost several MB and 50+ npm packages.",
+      "Before that, at Asurion, I led a UI team of 9 on a React, Redux and TypeScript CRM used by thousands of call-centre agents, and a Vue push-notification dashboard. Knowledge-base search got 100x faster, and five GreenSock animations replaced MP4 onboarding videos, saving 1.8 MB per download.",
+      "I dont have many visual examples of my due to NDAs, but here are a few screenshots of my work.",
     ],
     media: [
       {
@@ -78,16 +80,10 @@ window.fnLamboTables = [
         subtitle: "My CMS - BE Editing",
         file: "./images/backend1.jpg",
       },
-      {
-        type: "image",
-        subtitle: "My CMS - Performance",
-        file: "./images/speed.jpg",
-      },
-      {
-        type: "image",
-        subtitle: "AstroJS/React Miniapp Performance",
-        file: "./images/100.png",
-      },
+    ],
+    text2: [
+      "My full-stack background helps me design better APIs with backend teams: PHP, .NET/C#, Node.js, MongoDB, SQL Server, MySQL and AWS. At GoGo World I built a custom .NET CMS and four multilingual sites, cutting translation time from a week to minutes and page weight by about 97%, which grew organic search traffic by over 500%.",
+      "I also work with testing (Jest, Vitest), CI/CD (GitHub Actions, CircleCI, Jenkins), WebRTC video, SSO, Elasticsearch, Algolia and analytics. I write code by hand and with AI coding tools, and review everything that ships.",
     ],
   },
   {
