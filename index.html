@@ -3,6 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- text sizes (1rem) follow the phone's own text size setting: Chrome on Android with this tag, iOS Safari with the
+         -apple-system-body font below. So no font size may be set on the html element here. -->
+    <meta name="text-scale" content="scale" />
     <title>Nathan Brown - Portfolio</title>
     <meta
       name="description"
@@ -55,6 +58,14 @@
         -webkit-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+      }
+      /* iOS (the only place -webkit-touch-callout is supported): the root font size is the Dynamic Type body size, which
+         follows Settings > Display & Brightness > Text Size (17px at the default size). The face itself stays the default. */
+      @supports (font: -apple-system-body) and (-webkit-touch-callout: none) {
+        html {
+          font: -apple-system-body;
+          font-family: initial;
+        }
       }
       fn-lambo {
         outline: none;
